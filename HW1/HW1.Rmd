@@ -1,0 +1,122 @@
+---
+title: "Homework Assignment 1"
+author: "Seokjun Choi"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+\noindent Problem 1. 
+Use the qnorm function in R to find the quartiles 
+(i.e., 25th, 50th and 75th percentiles) 
+of the normal distribution with mean 100 and standard deviation 10. 
+
+```{r problem1}
+qnorm(c(0.25, 0.5, 0.75), 100, 10)
+```
+
+\vspace{1cm}
+
+\noindent Problem 2. 
+Use the curve function in R to display the graph of a $\chi^2(10)$ (10 corresponds to the degrees of freedom). 
+Use a range of 0 to 100 for the x-axis. 
+The chi-square density function is dchisq. 
+
+```{r problem2, echo=TRUE}
+curve(dchisq(x, 10), xlim = c(0, 100))
+```
+
+
+\noindent Problem3. (Albert and Rizzo Chapter 1, problem 3.)
+(Gamma densities). Use the curve function to display the graph of the
+gamma density with shape parameter 1 and rate parameter 1. Then use the
+curve function with add=TRUE to display the graphs of the gamma density
+with shape parameter k and rate 1 for 2,3, all in the same graphics window.
+The gamma density function is dgamma. Consult the help file ?dgamma to see
+how to specify the parameters.
+```{r problem3, echo=TRUE}
+curve(dgamma(x, shape = 1, rate = 1), xlim = c(0, 10),
+  ylim = c(0, 1), xlab = "gamma densities")
+curve(dgamma(x, shape = 2, rate = 1), add = TRUE, col = "red")
+curve(dgamma(x, shape = 3, rate = 1), add = TRUE, col = "blue")
+legend(7, 0.99, c("gamma(1,1)", "gamma(2,1)", "gamma(3,1)"), lty = 1,
+  col = c("black", "red", "blue"), cex = 1)
+```
+
+\noindent Problem4. (Albert and Rizzo Chapter 1, problem 5.)
+(Binomial CDF). Let X be the number of “ones” obtained in 12 rolls
+of a fair die. Then X has a Binomial(n = 12, p = 1/3) distribution. 
+Compute a table of cumulative binomial probabilities (the CDF) 
+for x = 0,1,...,12 by two methods: 
+(1) using cumsum and the result of Exercise 1.4, and 
+(2) using the pbinom function. What is P(X > 7)?
+
+Following the direction of (1), I'll use 'dbinom' function
+```{r}
+cumsum(dbinom(0:12, 12, 1 / 3))
+```
+```{r}
+1 - cumsum(dbinom(0:12, 12, 1 / 3))[8]
+```
+
+Next, following (2), using 'pbinom' function,
+```{r}
+pbinom(0:12, 12, 1 / 3)
+```
+```{r}
+1 - pbinom(7, 12, 1 / 3)
+```
+Two vectors of cdf values are exactly same.
+The P(x>7) values are also same.
+
+
+
+\noindent Problem5. (Albert and Rizzo Chapter 1, problem 7.)
+(Simulated “horsekicks” data). The rpois function generates random
+observations from a Poisson distribution. In Example 1.3, we compared the
+deaths due to horsekicks to a Poisson distribution with mean $\lambda = 0.61$, and
+in Example 1.4 we simulated random Poisson($\lambda = 0.61$) data. Use the rpois
+function to simulate very large (n = 1000 and n = 10000) Poisson($\lambda = 0.61$)
+random samples. Find the frequency distribution, mean and variance for the
+sample. Compare the theoretical Poisson density with the sample proportions
+(see Example 1.4).
+
+When n=1000,
+```{r}
+pois_sample_1000 <- rpois(1000, 0.61)
+empirical_1000 <-  table(pois_sample_1000) / 1000
+theoretical_1000 <- dpois(0:(length(empirical_1000) - 1), 0.61)
+rbind(empirical_1000,  theoretical_1000)
+```
+```{r}
+mean(pois_sample_1000)
+var(pois_sample_1000)
+```
+
+When n=10000,
+```{r}
+pois_sample_10000 <- rpois(10000, 0.61)
+empirical_10000 <-  table(pois_sample_10000) / 10000
+theoretical_10000 <- dpois(0:(length(empirical_10000) - 1), 0.61)
+rbind(empirical_10000,  theoretical_10000)
+```
+```{r}
+mean(pois_sample_10000)
+var(pois_sample_10000)
+```
+The result of n=10000 is closer to the theoretical result than the case of n=1000.
+
+
+\noindent Problem6. (Albert and Rizzo Chapter 1, problem 8.)
+
+\noindent Problem7. (Albert and Rizzo Chapter 1, problem 9.)
+\noindent problem8. (Albert and Rizzo Chapter 1, problem 10.)
+\noindent problem9. (Albert and Rizzo Chapter 1, problem 11.)
+\noindent problem10. (Albert and Rizzo Chapter 1, problem 12. )
+\noindent problem11. (Albert and Rizzo Chapter 2, problem 3.) Briefly describe your findings.
+\noindent problem12. (Albert and Rizzo Chapter 2, problems 4 and 5.) Briefly describe your findings.
+\noindent problem13. (Albert and Rizzo Chapter 2, problems 7 and 8.) Briefly describe your findings.
+\noindent problem14. (Albert and Rizzo Chapter 2, problems 10 and 11.)
+\noindent problem15. (James et al. Chapter 2, problem 8.)
+\noindent problem16. (James et al. Chapter 2, problem 10.)
