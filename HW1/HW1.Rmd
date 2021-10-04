@@ -8,9 +8,8 @@ output:
 ---
 
 \noindent Problem 1. 
-Use the qnorm function in R to find the quartiles 
-(i.e., 25th, 50th and 75th percentiles) 
-of the normal distribution with mean 100 and standard deviation 10. 
+Q: Use the qnorm function in R to find the quartiles (i.e., 25th, 50th and 75th percentiles) of the normal distribution with mean 100 and standard deviation 10. 
+A: 
 
 ```{r problem1}
 qnorm(c(0.25, 0.5, 0.75), 100, 10)
@@ -109,14 +108,601 @@ The result of n=10000 is closer to the theoretical result than the case of n=100
 
 
 \noindent Problem6. (Albert and Rizzo Chapter 1, problem 8.)
+(horsekicks, continued). Refer to Example 1.3. 
+Using the ppois function, compute the cumulative distribution function (CDF) 
+for the Poisson distribution with mean $\lambda$ = 0.61, for the values 0 to 4. 
+Compare these probabilities with the empirical CDF. 
+The empirical CDF is the cumulative sum of the sample proportions p, 
+which is easily computed using the cumsum function. 
+Combine the values of 0:4, the CDF, and the empirical CDF in a matrix
+to display these results in a single table.
+
+```{r}
+pois_sample_10000 <- rpois(10000, 0.61)
+empirical_density <-  (table(pois_sample_10000) / 10000)[1:5]
+empirical_cdf <- cumsum(empirical_density)
+theoretical_cdf <- ppois(0:4, 0.61)
+print(rbind(empirical_cdf, theoretical_cdf))
+```
+the CDF and the empirical CDF are quite simillar.
+If I generate more samples, they will be more similar.
+
+
 
 \noindent Problem7. (Albert and Rizzo Chapter 1, problem 9.)
-\noindent problem8. (Albert and Rizzo Chapter 1, problem 10.)
-\noindent problem9. (Albert and Rizzo Chapter 1, problem 11.)
-\noindent problem10. (Albert and Rizzo Chapter 1, problem 12. )
-\noindent problem11. (Albert and Rizzo Chapter 2, problem 3.) Briefly describe your findings.
-\noindent problem12. (Albert and Rizzo Chapter 2, problems 4 and 5.) Briefly describe your findings.
-\noindent problem13. (Albert and Rizzo Chapter 2, problems 7 and 8.) Briefly describe your findings.
-\noindent problem14. (Albert and Rizzo Chapter 2, problems 10 and 11.)
+(Custom standard deviation function) Write a function sd.n similar to the function var.n in Example 1.5 
+that will return the estimate $\hat{\sigma}$ (the square root of $\hat{\sigma}^2$). 
+Try this function on the temperature data of Example 1.1
+
+```{r}
+sd.n <- function(x) {
+  n <- NROW(x)
+  var_n <- var(x) * (n - 1) / n
+  return(sqrt(var_n))
+}
+temperature_data <- c(51.9, 51.8, 51.9, 53)
+names(temperature_data) <- 1968 : 1971
+print(temperature_data)
+print(sd.n(temperature_data))
+```
+
+\noindent Problem8. (Albert and Rizzo Chapter 1, problem 10.)
+(Euclidean norm function) Write a function norm that will compute
+the Euclidean norm of a numeric vector. The Euclidean norm of a vector
+$x = (x_1,...,x_n)$ is
+\[||x|| = \sqrt{\sum_{i=1}^n x_i^2}\]
+
+Use vectorized operations to compute the sum. 
+Try this function on the vectors (0,0,0,1) and (2,5,2,4) to check that your function result is correct.
+
+```{r}
+euclidean_norm <- function(vec) {
+  return(sqrt(sum(vec^2)))
+}
+
+test_vector1 <- c(0, 0, 0, 1)
+test_vector2 <- c(2, 5, 2, 4)
+
+print(euclidean_norm(test_vector1))
+print(euclidean_norm(test_vector2))
+```
+
+\noindent Problem9. (Albert and Rizzo Chapter 1, problem 11.)
+(Numerical integration) Use the curve function to display the
+graph of the function $f(x)=e^{-x^2}/(1+x^2)$ 
+on the interval $0 \leq x \leq 10$. Then
+use the integrate function to compute the value of the integral
+\[\int_0^\infty \frac{e^{-x^2}}{1+x^2}dx\]
+The upper limit at infinity is specified by upper=Inf in the integrate function.
+
+```{r}
+integrand_func <- function(x) {
+  return(exp(-x^2) / (1 + x^2))
+}
+curve(integrand_func((x)), from = 0, to = 10)
+```
+```{r}
+print(integrate(integrand_func, 0, Inf))
+```
+
+
+\noindent Problem10. (Albert and Rizzo Chapter 1, problem 12. )
+(Bivariate normal) Construct a matrix with 10 rows and 2 columns,
+containing random standard normal data:
+
+x = matrix(rnorm(20), 10, 2)
+
+This is a random sample of 10 observations from a standard bivariate normal
+distribution. Use the apply function and your norm function from Exercise
+1.10 to compute the Euclidean norms for each of these 10 observations.
+
+```{r}
+euclidean_norm <- function(vec) {
+  return(sqrt(sum(vec^2)))
+}
+
+x <- matrix(rnorm(20), 10, 2)
+euclidean_norm(x[1, ]) #for check
+print(apply(x, 1, euclidean_norm)) #margin 1 : row-wise
+```
+
+\noindent Problem11. (Albert and Rizzo Chapter 2, problem 3.) Briefly describe your findings.
+(mtcars data) Display the mtcars data included with R and read the
+documentation using ?mtcars. Display parallel boxplots of the quantitative
+variables. Display a pairs plot of the quantitative variables. Does the pairs
+plot reveal any possible relations between the variables?
+
+```{r}
+data(mtcars)
+# ?mtcars
+head(mtcars)
+mtcars_quantitative <- mtcars[, c(-8, -9)]
+boxplot(mtcars_quantitative)
+boxplot(mtcars_quantitative[, c(-3, -4)])
+pairs(mtcars_quantitative)
+```
+Yes, the plot reveal some relations between the variables. Pairs such as mpg-disp, mpg-hp, mpg-drat, mpg-wt, mpg-qsec, mpg-carb
+cyl-disp, cyl-hp, cyl-wt, cyl-qsec, disp-hp, disp-wt, hp-wt, wp-qsec, hp-carb, drat-wp seem to have linear relations.
+
+\noindent Problem12. (Albert and Rizzo Chapter 2, problems 4 and 5.) Briefly describe your findings.
+Refer to Example 2.7. Create a new variable r equal
+to the ratio of brain size over body size. Using the full mammals data set, 
+order the mammals data by the ratio r. Which mammals have the largest ratios of
+brain size to body size? Which mammals have the smallest ratios? (Hint: use
+head and tail on the ordered data.)
+```{r}
+library(MASS)
+data(mammals)
+# ?mammals
+mammals[which.max(mammals$brain), ] #max brain
+mammals[which.min(mammals$brain), ] #min brain
+
+r <- mammals$brain / mammals$body
+mammals[which.max(r), ] #max ratio
+mammals[which.min(r), ] #min ratio
+
+mammals$ratio <- r
+ordered_mammals <- mammals[order(mammals$ratio), ]
+
+head(ordered_mammals)
+tail(ordered_mammals)
+```
+Although African elephants have the most weighted brain,
+their ratio is the smallest. This is because their bodies are very heavy.
+
+
+
+\noindent Problem13. (Albert and Rizzo Chapter 2, problems 7 and 8.) Briefly describe your findings.
+(2.7) (Central Limit Theorem with simulated data). Refer to Example
+2.6, where we computed sample means for each row of the randu data frame.
+Repeat the analysis, but instead of randu, create a matrix of random numbers
+using runif.
+
+```{r}
+unif_3samples_mat <- matrix(runif(400 * 3, 0, 1), 400, 3)
+unif_3samples_df <- as.data.frame(unif_3samples_mat)
+colnames(unif_3samples_df) <- c("x", "y", "z")
+head(unif_3samples_df)
+colMeans(unif_3samples_df) # theoretically: 0.5
+var(unif_3samples_df) # theoretically: 0.08333 for diagonal elements, otherwise 0
+diag(var(unif_3samples_df))
+cor(unif_3samples_df)
+
+library(lattice)
+cloud(z ~ x + y, data = unif_3samples_df) #seems good!
+
+test_clt_3 <- rowMeans(unif_3samples_df)
+library(MASS)
+truehist(test_clt_3, xlim = c(0, 1), ylim = c(0, 3), breaks = seq(0, 1, by = 0.025))
+lines(density(test_clt_3))
+curve(dnorm(x, 1 / 2, sd = sqrt(1 / 12 / 3)), add = TRUE, col = "red")
+legend("topleft", lty = c(1, 1), col = c("black", "red"), legend = c("estimated density", "theoretical density"), inset = 0.02)
+
+qqnorm(test_clt_3)
+qqline(test_clt_3)
+```
+The 'runif' function of R generates good pseudo random numbers.
+The samples from the 'runif' function have reasonable mean, variance and correlation values.
+And, the CLT is realized on the samples. (Sometimes, samples from 'wrongly implemented random number generater' fail to realize the CLT.)
+Moreover, when drawing the 3-D plot,  samples from the 'runif' are better than the samples of 'randu' data frame,
+because there is no linear relationship like samples of 'randu'.
+
+
+(2.8) (Central Limit Theorem, continued). Refer to Example 2.6 and Exercise 2.7, 
+where we computed sample means for each row of the data frame.
+Repeat the analysis in Exercise 2.7, but instead of sample size 3 generate a
+matrix that is 400 by 10 (sample size 10). Compare the histogram for sample
+size 3 and sample size 10. What does the Central Limit Theorem tell us about
+the distribution of the mean as sample size increases?
+
+```{r}
+unif_10samples_mat <- matrix(runif(400 * 10, 0, 1), 400, 10)
+unif_10samples_df <- as.data.frame(unif_10samples_mat)
+colnames(unif_10samples_df) <- 1:10
+head(unif_10samples_df)
+colMeans(unif_10samples_df) # theoretically: 0.5
+var(unif_10samples_df) # theoretically: 0.08333 for diagonal elements, otherwise 0
+diag(var(unif_10samples_df))
+cor(unif_10samples_df)
+
+
+test_clt_10 <- rowMeans(unif_10samples_df)
+# library(MASS)
+truehist(test_clt_10, xlim = c(0, 1), ylim = c(0, 5), breaks = seq(0, 1, by = 0.025))
+curve(dnorm(x, 1 / 2, sd = sqrt(1 / 12 / 10)), add = TRUE, col = "red")
+lines(density(test_clt_10))
+legend("topleft", lty = c(1, 1), col = c("black", "red"), legend = c("estimated density", "theoretical density"), inset = 0.02)
+
+qqnorm(test_clt_10)
+qqline(test_clt_10)
+```
+
+To compare case of 3-sample with 10-sample,
+```{r}
+par(mfrow = c(1, 2))
+hist_ax <- seq(0, 1, by = 0.025)
+truehist(test_clt_3, breaks = hist_ax, xlim = c(0, 1), ylim = c(0, 5))
+truehist(test_clt_10, breaks = hist_ax, xlim = c(0, 1), ylim = c(0, 5))
+```
+
+The variance of the mean values' distribution becomes small as the sample size increases.
+Thus, sample mean tends to be close to the true mean value.
+
+
+\noindent Problem14. (Albert and Rizzo Chapter 2, problems 10 and 11.)
+(2.10) ("Old Faithful" histogram). Use hist to display a probability histogram of 
+the waiting times for the Old Faithful geyser in the faithful data
+set (see Example A.3). (Use the argument prob=TRUE or freq=FALSE.)
+```{r}
+data(faithful)
+head(faithful)
+par(mfrow = c(1, 1))
+hist(faithful$waiting, probability = TRUE)
+```
+
+
+(2.11) ("Old Faithful" density estimate). Use hist to display a probability
+histogram of the waiting times for the Old Faithful geyser in the faithful data
+set (see Example A.3) and add a density estimate using lines
+```{r}
+hist(faithful$waiting, probability = TRUE)
+lines(density(faithful$waiting))
+```
+
+
+
 \noindent problem15. (James et al. Chapter 2, problem 8.)
+This exercise relates to the College data set, which can be found in
+the file College.csv. It contains a number of variables for 777 different
+universities and colleges in the US. The variables are
+
+- Private : Public/private indicator
+- Apps : Number of applications received
+- Accept : Number of applicants accepted
+- Enroll : Number of new students enrolled
+- Top10perc : New students from top 10 % of high school class
+- Top25perc : New students from top 25 % of high school class
+- F.Undergrad : Number of full-time undergraduates
+- P.Undergrad : Number of part-time undergraduates
+- Outstate : Out-of-state tuition
+- Room.Board : Room and board costs
+- Books : Estimated book costs
+- Personal : Estimated personal spending
+- PhD : Percent of faculty with Ph.D.'s
+- Terminal : Percent of faculty with terminal degree
+- S.F.Ratio : Student/faculty ratio
+- perc.alumni : Percent of alumni who donate
+- Expend : Instructional expenditure per student
+- Grad.Rate : Graduation rate
+
+Before reading the data into R, it can be viewed in Excel or a text
+editor.
+
+
+(a) Use the read.csv() function to read the data into R. Call the
+loaded data college. Make sure that you have the directory set
+to the correct location for the data.
+
+Instead of loading from the 'College.csv' file, I load the data from the ISLR package.
+```{r}
+library(ISLR)
+data(College)
+# ?College
+head(College)
+```
+
+
+(b) Look at the data using the fix() function. You should notice
+that the first column is just the name of each university. We don't
+really want R to treat this as data. However, it may be handy to
+have these names for later. Try the following commands:
+
+```{r}
+college <- College
+# rownames(college) <- college [, 1]
+# fix(college)
+```
+
+You should see that there is now a row.names column with the
+name of each university recorded. This means that R has given
+each row a name corresponding to the appropriate university. R
+will not try to perform calculations on the row names. However,
+we still need to eliminate the first column in the data where the
+names are stored. Try
+
+```{r}
+# college <- college[, -1]
+# fix(college)
+head(college)
+```
+(Note: College data in the ISLR package, this work is already done.)
+
+
+Now you should see that the first data column is Private. Note
+that another column labeled row.names now appears before the
+Private column. However, this is not a data column but rather
+the name that R is giving to each row.
+
+
+(c) 
+1. Use the summary() function to produce a numerical summary
+of the variables in the data set.
+
+```{r}
+summary(college)
+```
+
+2. Use the pairs() function to produce a scatterplot matrix of
+the first ten columns or variables of the data. Recall that
+you can reference the first ten columns of a matrix A using
+A[, 1:10].
+```{r}
+pairs(college[, 1:10])
+```
+
+
+3. Use the plot() function to produce side-by-side boxplots of
+Outstate versus Private.
+
+```{r}
+plot(Outstate ~ Private, data = college)
+```
+We can find a difference by the value of Private.
+Although whiskers overlap, boxes do not.
+
+4. Create a new qualitative variable, called Elite, by binning
+the Top10perc variable. We are going to divide universities
+into two groups based on whether or not the proportion
+of students coming from the top 10 % of their high school
+classes exceeds 50 %.
+
+```{r}
+Elite <- rep("No", nrow(college))
+Elite[college$Top10perc > 50] <- "Yes"
+Elite <- as.factor(Elite)
+college <- data.frame(college, Elite)
+```
+
+Use the summary() function to see how many elite universities there are.
+
+```{r}
+summary(college)
+```
+There are 78 elite universities.
+
+
+Now use the plot() function to produce
+side-by-side boxplots of Outstate versus Elite.
+```{r}
+plot(Outstate ~ Elite, data = college)
+```
+
+Not more than Outstate versus Privates, two boxes still does not overlap.
+
+
+5. Use the hist() function to produce some histograms with
+differing numbers of bins for a few of the quantitative variables. 
+You may find the command par(mfrow=c(2,2)) useful:
+it will divide the print window into four regions so that four
+plots can be made simultaneously. Modifying the arguments
+to this function will divide the screen in other ways.
+
+```{r}
+summary(college)
+?College
+par(mfrow = c(2, 2))
+hist(college$Apps, breaks = 5)
+hist(college$Apps, breaks = 10)
+hist(college$Apps, breaks = 20)
+hist(college$Apps, breaks = 50)
+```
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Accept, breaks = 5)
+hist(college$Accept, breaks = 10)
+hist(college$Accept, breaks = 20)
+hist(college$Accept, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Enroll, breaks = 5)
+hist(college$Enroll, breaks = 10)
+hist(college$Enroll, breaks = 20)
+hist(college$Enroll, breaks = 50)
+```
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Top10perc, breaks = 5)
+hist(college$Top10perc, breaks = 10)
+hist(college$Top10perc, breaks = 20)
+hist(college$Top10perc, breaks = 50)
+```
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Top25perc, breaks = 5)
+hist(college$Top25perc, breaks = 10)
+hist(college$Top25perc, breaks = 20)
+hist(college$Top25perc, breaks = 50)
+```
+```{r}
+par(mfrow = c(2, 2))
+hist(college$F.Undergrad, breaks = 5)
+hist(college$F.Undergrad, breaks = 10)
+hist(college$F.Undergrad, breaks = 20)
+hist(college$F.Undergrad, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$P.Undergrad, breaks = 5)
+hist(college$P.Undergrad, breaks = 10)
+hist(college$P.Undergrad, breaks = 20)
+hist(college$P.Undergrad, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Outstate, breaks = 5)
+hist(college$Outstate, breaks = 10)
+hist(college$Outstate, breaks = 20)
+hist(college$Outstate, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Room.Board, breaks = 5)
+hist(college$Room.Board, breaks = 10)
+hist(college$Room.Board, breaks = 20)
+hist(college$Room.Board, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Books, breaks = 5)
+hist(college$Books, breaks = 10)
+hist(college$Books, breaks = 20)
+hist(college$Books, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Personal, breaks = 5)
+hist(college$Personal, breaks = 10)
+hist(college$Personal, breaks = 20)
+hist(college$Personal, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$PhD, breaks = 5)
+hist(college$PhD, breaks = 10)
+hist(college$PhD, breaks = 20)
+hist(college$PhD, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Terminal, breaks = 5)
+hist(college$Terminal, breaks = 10)
+hist(college$Terminal, breaks = 20)
+hist(college$Terminal, breaks = 50)
+```
+
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$S.F.Ratio, breaks = 5)
+hist(college$S.F.Ratio, breaks = 10)
+hist(college$S.F.Ratio, breaks = 20)
+hist(college$S.F.Ratio, breaks = 50)
+```
+
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$perc.alumni, breaks = 5)
+hist(college$perc.alumni, breaks = 10)
+hist(college$perc.alumni, breaks = 20)
+hist(college$perc.alumni, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Expend, breaks = 5)
+hist(college$Expend, breaks = 10)
+hist(college$Expend, breaks = 20)
+hist(college$Expend, breaks = 50)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(college$Grad.Rate, breaks = 5)
+hist(college$Grad.Rate, breaks = 10)
+hist(college$Grad.Rate, breaks = 20)
+hist(college$Grad.Rate, breaks = 50)
+```
+6. Continue exploring the data, and provide a brief summary
+of what you discover.
+
+```{r}
+panel.hist <- function(x, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor)
+}
+
+pairs(college[, 2:9],  upper.panel = panel.cor, panel = panel.smooth,
+      cex = 1.5, pch = 24, bg = "light blue", horOdd=TRUE,
+      diag.panel = panel.hist, cex.labels = 2, font.labels = 2)
+
+pairs(college[, 10:18],  upper.panel = panel.cor, panel = panel.smooth,
+      cex = 1.5, pch = 24, bg = "light blue", horOdd=TRUE,
+      diag.panel = panel.hist, cex.labels = 2, font.labels = 2)
+
+round(cor(college[2:18]), 3)
+```
+
+
+
+
 \noindent problem16. (James et al. Chapter 2, problem 10.)
+This exercise involves the Boston housing data set.
+1. To begin, load in the Boston data set. The Boston data set is
+part of the MASS library in R.
+```{r}
+library(MASS)
+data(Boston)
+?Boston
+```
+There 506 rows and 14 columns. Each column is
+
+- crim : per capita crime rate by town.
+- zn : proportion of residential land zoned for lots over 25,000 sq.ft.
+- indus : proportion of non-retail business acres per town.
+- chas : Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+- nox : nitrogen oxides concentration (parts per 10 million).
+- rm : average number of rooms per dwelling.
+- age : proportion of owner-occupied units built prior to 1940.
+- dis : weighted mean of distances to five Boston employment centres.
+- rad : index of accessibility to radial highways.
+- tax : full-value property-tax rate per \$10,000.
+- ptratio : pupil-teacher ratio by town.
+- black : 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+- lstat : lower status of the population (percent).
+- medv : median value of owner-occupied homes in \$1000s.
+
+
+2. Make some pairwise scatterplots of the predictors (columns) in
+this data set. Describe your findings.
+3. Are any of the predictors associated with per capita crime rate?
+If so, explain the relationship.
+4. Do any of the suburbs of Boston appear to have particularly
+high crime rates? Tax rates? Pupil-teacher ratios? Comment on
+the range of each predictor.
+5. How many of the suburbs in this data set bound the Charles
+river?
+6. What is the median pupil-teacher ratio among the towns in this
+data set?
+7. Which suburb of Boston has lowest median value of owner occupied homes? 
+What are the values of the other predictors
+for that suburb, and how do those values compare to the overall
+ranges for those predictors? Comment on your findings.
+8. In this data set, how many of the suburbs average more than
+seven rooms per dwelling? More than eight rooms per dwelling?
+Comment on the suburbs that average more than eight rooms
+per dwelling.
