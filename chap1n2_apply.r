@@ -1,3 +1,18 @@
+#matrices
+
+S = matrix(c(1, 0.5, 1.3, 0.4, -1, 0.2, 0.5, -1, 0.6), 3, 3)
+S
+apply(S,2,sum) #col
+apply(S,1,sum) #row
+S
+S[,3]
+
+#solve
+solve(S) #inverse
+x = c(0,1,2)
+solve(S,x) # solution of Sb=x
+
+
 #apply
 ?apply
 mat1 <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), 3, 3)
