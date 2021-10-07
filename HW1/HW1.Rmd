@@ -8,7 +8,7 @@ output:
 ---
 
 
-### \noindent Problem 1.
+### \noindent Problem1.
 **Use the qnorm function in R to find the quartiles (i.e., 25th, 50th and 75th percentiles) of the normal distribution with mean 100 and standard deviation 10.**
 
 ```{r problem1}
@@ -17,7 +17,7 @@ qnorm(c(0.25, 0.5, 0.75), 100, 10)
 
 \vspace{1cm}
 
-### \noindent Problem 2. 
+### \noindent Problem2. 
 **Use the curve function in R to display the graph of a $\chi^2(10)$ (10 corresponds to the degrees of freedom). Use a range of 0 to 100 for the x-axis. The chi-square density function is dchisq.**
 
 ```{r problem2, echo=TRUE}
@@ -31,7 +31,7 @@ curve(dchisq(x, 10), xlim = c(0, 100))
 
 ```{r problem3, echo=TRUE}
 curve(dgamma(x, shape = 1, rate = 1), xlim = c(0, 10),
-  ylim = c(0, 1), xlab = "gamma densities")
+  ylim = c(0, 1), xlab = "gamma densities", ylab = "dgamma")
 curve(dgamma(x, shape = 2, rate = 1), add = TRUE, col = "red")
 curve(dgamma(x, shape = 3, rate = 1), add = TRUE, col = "blue")
 legend(7, 0.99, c("gamma(1,1)", "gamma(2,1)", "gamma(3,1)"), lty = 1,
@@ -150,7 +150,7 @@ sd.n(temperature_data)
 **Use vectorized operations to compute the sum.**
 **Try this function on the vectors (0,0,0,1) and (2,5,2,4) to check that your function result is correct.**
 
-First, let me define the euclidean norm function.
+First, let me define an euclidean norm function.
 ```{r}
 euclidean_norm <- function(vec) {
   return(sqrt(sum(vec^2)))
@@ -166,6 +166,8 @@ euclidean_norm(test_vector1)
 test_vector2 <- c(2, 5, 2, 4)
 euclidean_norm(test_vector2)
 ```
+
+\vspace{1cm}
 
 ### \noindent Problem9. 
 **(Albert and Rizzo Chapter 1, problem 11.)(Numerical integration) Use the curve function to display the graph of the function $f(x)=e^{-x^2}/(1+x^2)$ on the interval $0 \leq x \leq 10$.**
@@ -224,13 +226,18 @@ mtcars_quantitative <- mtcars[, c(-8, -9)]
 boxplot(mtcars_quantitative)
 ```
 
-'hp' has an outlier (about 350.)
-However, because of different scales, the boxplots except for 'disp' and 'hp' are not plotted well.
-So, let me show another parallel boxplots for 7 covariates.
+We can see where the median and quartiles are.
+'disp' and 'hp' are not symmetric, but skewed.
+Moreover, 'hp' has an outlier (around 350.)
+
+Because of different scales, other boxplots except for 'disp' and 'hp' are not plotted well.
+So, let me show another parallel boxplots for the other seven variables.
 ```{r}
 boxplot(mtcars_quantitative[, c(-3, -4)])
 ```
 There are still a scale problem, but I'll stop here.
+'qsec' and 'carb' have an outlier, respectively. 
+
 
 Next, these are pair plots.
 ```{r}
@@ -255,15 +262,15 @@ data(mammals)
 # ?mammals
 ```
 
-Next, make variable for ratios.
-Actually, we can find rows having the maximum ratio value and the minimum ratio value.
+Next, let's make variable for ratios.
+Actually, we can find rows having the maximum ratio value and the minimum ratio value directly, by using the 'which.max' function.
 ```{r}
 r <- mammals$brain / mammals$body
 mammals[which.max(r), ] #max ratio
 mammals[which.min(r), ] #min ratio
 ```
 
-However, following the problem's direction, let's sort the data frame by ratio.
+But, let's sort the dataframe by ratio following the problem's direction.
 ```{r}
 mammals$ratio <- r
 ordered_mammals <- mammals[order(mammals$ratio), ]
@@ -271,6 +278,7 @@ ordered_mammals <- mammals[order(mammals$ratio), ]
 head(ordered_mammals)
 tail(ordered_mammals)
 ```
+
 Although African elephants have the most weighted brain, their ratio is the smallest. This is because their bodies are very heavy.
 
 
@@ -281,7 +289,7 @@ Although African elephants have the most weighted brain, their ratio is the smal
 plot(mammals$ratio ~ mammals$body)
 ```
 Because of too many outliers, the plot is hard to see.
-If we use some transformation, it will be better. But I'll skip it.
+If we use some transformations, we may make it be better to find hidden relationships. But I'll skip it here.
 
 \vspace{1cm}
 
@@ -317,7 +325,7 @@ qqline(test_clt_3)
 The 'runif' function of R generates good pseudo random numbers.
 The samples from the 'runif' function have reasonable mean, variance and correlation values.
 And, the CLT is realized on the samples. (Sometimes, samples from 'wrongly implemented random number generater' fail to realize the CLT.)
-Moreover, when drawing the 3-D plot, samples from the 'runif' in R are better than the samples of 'randu' data frame,
+Moreover, when drawing the 3-D plot, we can find that samples from the 'runif' in R are better than the samples of 'randu' dataframe,
 because there is no linear relationship like samples of 'randu'.
 
 
@@ -325,7 +333,7 @@ because there is no linear relationship like samples of 'randu'.
 **Repeat the analysis in Exercise 2.7, but instead of sample size 3 generate a matrix that is 400 by 10 (sample size 10).**
 **Compare the histogram for sample size 3 and sample size 10. What does the Central Limit Theorem tell us about the distribution of the mean as sample size increases?**
 
-Let's repeat the above code block with 10-column matrix.
+Let's repeat the above code blocks with 10-column matrix.
 ```{r}
 unif_10samples_mat <- matrix(runif(400 * 10, 0, 1), 400, 10)
 unif_10samples_df <- as.data.frame(unif_10samples_mat)
@@ -356,8 +364,9 @@ truehist(test_clt_3, breaks = hist_ax, xlim = c(0, 1), ylim = c(0, 5))
 truehist(test_clt_10, breaks = hist_ax, xlim = c(0, 1), ylim = c(0, 5))
 ```
 
-The variance of the mean values' distribution becomes small as the sample size increases.
+We can find that the variance of the sample means' distribution gets small as the sample size increases.
 In other words, sample means tend to be close to the true mean value.
+It is another implication of the CLT.
 
 \vspace{1cm}
 
@@ -384,10 +393,9 @@ lines(density(faithful$waiting))
 
 \vspace{1cm}
 
-\noindent problem15. (James et al. Chapter 2, problem 8.)
-This exercise relates to the College data set, which can be found in
-the file College.csv. It contains a number of variables for 777 different
-universities and colleges in the US. The variables are
+### \noindent problem15. 
+**(James et al. Chapter 2, problem 8.) This exercise relates to the College data set, which can be found inthe file College.csv.**
+**It contains a number of variables for 777 different universities and colleges in the US. The variables are**
 
 - Private : Public/private indicator
 - Apps : Number of applications received
@@ -408,15 +416,13 @@ universities and colleges in the US. The variables are
 - Expend : Instructional expenditure per student
 - Grad.Rate : Graduation rate
 
-Before reading the data into R, it can be viewed in Excel or a text
-editor.
+**Before reading the data into R, it can be viewed in Excel or a text editor.**
 
 
-(a) Use the read.csv() function to read the data into R. Call the
-loaded data college. Make sure that you have the directory set
-to the correct location for the data.
+**(a) Use the read.csv() function to read the data into R.**
+**Call the loaded data college. Make sure that you have the directory set to the correct location for the data.**
 
-Instead of loading from the 'College.csv' file, I load the data from the ISLR package.
+Instead of loading the data from the 'College.csv' file, I load the data from the ISLR package.
 ```{r}
 library(ISLR)
 data(College)
@@ -425,10 +431,8 @@ head(College)
 ```
 
 
-(b) Look at the data using the fix() function. You should notice
-that the first column is just the name of each university. We don't
-really want R to treat this as data. However, it may be handy to
-have these names for later. Try the following commands:
+**(b) Look at the data using the fix() function. You should notice that the first column is just the name of each university.**
+**We don't really want R to treat this as data. However, it may be handy to have these names for later. Try the following commands:**
 
 ```{r}
 college <- College
@@ -436,58 +440,50 @@ college <- College
 # fix(college)
 ```
 
-You should see that there is now a row.names column with the
-name of each university recorded. This means that R has given
-each row a name corresponding to the appropriate university. R
-will not try to perform calculations on the row names. However,
-we still need to eliminate the first column in the data where the
-names are stored. Try
+**You should see that there is now a row.names column with the name of each university recorded.**
+**This means that R has given each row a name corresponding to the appropriate university.**
+**R will not try to perform calculations on the row names. However, we still need to eliminate the first column in the data where the names are stored.**
+**Try**
 
 ```{r}
 # college <- college[, -1]
 # fix(college)
-head(college)
+# head(college)
 ```
-(Note: College data in the ISLR package, this work is already done.)
+
+Note that this work has already been done for the College data in the ISLR package.
 
 
-Now you should see that the first data column is Private. Note
-that another column labeled row.names now appears before the
-Private column. However, this is not a data column but rather
-the name that R is giving to each row.
+**Now you should see that the first data column is Private. Note that another column labeled row.names now appears before the Private column.**
+**However, this is not a data column but rather the name that R is giving to each row.**
 
 
-(c) 
-1. Use the summary() function to produce a numerical summary
-of the variables in the data set.
+**(c)**
+**1. Use the summary() function to produce a numerical summary of the variables in the data set.**
 
 ```{r}
 summary(college)
 ```
 
-2. Use the pairs() function to produce a scatterplot matrix of
-the first ten columns or variables of the data. Recall that
-you can reference the first ten columns of a matrix A using
-A[, 1:10].
+**2. Use the pairs() function to produce a scatterplot matrix of the first ten columns or variables of the data.**
+**Recall that you can reference the first ten columns of a matrix A using A[, 1:10].**
+
 ```{r}
 pairs(college[, 1:10])
 ```
 
-
-3. Use the plot() function to produce side-by-side boxplots of
-Outstate versus Private.
+**3. Use the plot() function to produce side-by-side boxplots of Outstate versus Private.**
 
 ```{r}
 plot(Outstate ~ Private, data = college)
 ```
-We can find a difference by the value of Private.
+
+Depending on the value of Private, we can see that the location of the box is different.
 Although whiskers overlap, boxes do not.
 
-4. Create a new qualitative variable, called Elite, by binning
-the Top10perc variable. We are going to divide universities
-into two groups based on whether or not the proportion
-of students coming from the top 10 % of their high school
-classes exceeds 50 %.
+**4. Create a new qualitative variable, called Elite, by binning the Top10perc variable.**
+**We are going to divide universities into two groups based on whether or not**
+**the proportion of students coming from the top 10 % of their high school classes exceeds 50 %.**
 
 ```{r}
 Elite <- rep("No", nrow(college))
@@ -496,38 +492,34 @@ Elite <- as.factor(Elite)
 college <- data.frame(college, Elite)
 ```
 
-Use the summary() function to see how many elite universities there are.
+**Use the summary() function to see how many elite universities there are.**
 
 ```{r}
 summary(college)
 ```
+
 There are 78 elite universities.
 
 
-Now use the plot() function to produce
-side-by-side boxplots of Outstate versus Elite.
+**Now use the plot() function to produce side-by-side boxplots of Outstate versus Elite.**
+
 ```{r}
 plot(Outstate ~ Elite, data = college)
 ```
 
-Not more than Outstate versus Privates, two boxes still does not overlap.
+Two boxes still does not overlap, although the difference between two boxes is diminished.
 
 
-5. Use the hist() function to produce some histograms with
-differing numbers of bins for a few of the quantitative variables. 
-You may find the command par(mfrow=c(2,2)) useful:
-it will divide the print window into four regions so that four
-plots can be made simultaneously. Modifying the arguments
-to this function will divide the screen in other ways.
+**5. Use the hist() function to produce some histograms with differing numbers of bins for a few of the quantitative variables.**
+**You may find the command par(mfrow=c(2,2)) useful:**
+**it will divide the print window into four regions so that four plots can be made simultaneously.**
+**Modifying the arguments to this function will divide the screen in other ways.**
 
-```{r}
-# ?College
-summary(college)
-```
+I exclude Private and Elite because they are categorical variables.
+And, because of the paper(?) size, I use par(mfrow=c(1,4)) instead of par(mfrow=c(2,2)).
 
-
-```{r, echo = FALSE}
-par(mfrow = c(3, 4))
+```{r, echo = FALSE, fig.height=2}
+par(mfrow = c(1, 4))
 hist(college$Apps, breaks = 5, main = "")
 hist(college$Apps, breaks = 10, main = "")
 hist(college$Apps, breaks = 20, main = "")
@@ -543,11 +535,6 @@ hist(college$Enroll, breaks = 10, main = "")
 hist(college$Enroll, breaks = 20, main = "")
 hist(college$Enroll, breaks = 50, main = "")
 
-```
-
-```{r, echo = FALSE}
-par(mfrow = c(3, 4))
-
 hist(college$Top10perc, breaks = 5, main = "")
 hist(college$Top10perc, breaks = 10, main = "")
 hist(college$Top10perc, breaks = 20, main = "")
@@ -562,10 +549,7 @@ hist(college$F.Undergrad, breaks = 5, main = "")
 hist(college$F.Undergrad, breaks = 10, main = "")
 hist(college$F.Undergrad, breaks = 20, main = "")
 hist(college$F.Undergrad, breaks = 50, main = "")
-```
 
-```{r, echo = FALSE}
-par(mfrow = c(2, 4))
 hist(college$P.Undergrad, breaks = 5, main = "")
 hist(college$P.Undergrad, breaks = 10, main = "")
 hist(college$P.Undergrad, breaks = 20, main = "")
@@ -575,10 +559,7 @@ hist(college$Outstate, breaks = 5, main = "")
 hist(college$Outstate, breaks = 10, main = "")
 hist(college$Outstate, breaks = 20, main = "")
 hist(college$Outstate, breaks = 50, main = "")
-```
 
-```{r, echo = FALSE}
-par(mfrow = c(2, 4))
 hist(college$Room.Board, breaks = 5, main = "")
 hist(college$Room.Board, breaks = 10, main = "")
 hist(college$Room.Board, breaks = 20, main = "")
@@ -588,10 +569,7 @@ hist(college$Books, breaks = 5, main = "")
 hist(college$Books, breaks = 10, main = "")
 hist(college$Books, breaks = 20, main = "")
 hist(college$Books, breaks = 50, main = "")
-```
 
-```{r, echo = FALSE}
-par(mfrow = c(2, 4))
 hist(college$Personal, breaks = 5, main = "")
 hist(college$Personal, breaks = 10, main = "")
 hist(college$Personal, breaks = 20, main = "")
@@ -601,10 +579,7 @@ hist(college$PhD, breaks = 5, main = "")
 hist(college$PhD, breaks = 10, main = "")
 hist(college$PhD, breaks = 20, main = "")
 hist(college$PhD, breaks = 50, main = "")
-```
 
-```{r, echo = FALSE}
-par(mfrow = c(2, 4))
 hist(college$Terminal, breaks = 5, main = "")
 hist(college$Terminal, breaks = 10, main = "")
 hist(college$Terminal, breaks = 20, main = "")
@@ -614,11 +589,7 @@ hist(college$S.F.Ratio, breaks = 5, main = "")
 hist(college$S.F.Ratio, breaks = 10, main = "")
 hist(college$S.F.Ratio, breaks = 20, main = "")
 hist(college$S.F.Ratio, breaks = 50, main = "")
-```
 
-
-```{r, echo = FALSE}
-par(mfrow = c(2, 4))
 hist(college$perc.alumni, breaks = 5, main = "")
 hist(college$perc.alumni, breaks = 10, main = "")
 hist(college$perc.alumni, breaks = 20, main = "")
@@ -628,19 +599,24 @@ hist(college$Expend, breaks = 5, main = "")
 hist(college$Expend, breaks = 10, main = "")
 hist(college$Expend, breaks = 20, main = "")
 hist(college$Expend, breaks = 50, main = "")
-```
 
-```{r, echo = FALSE}
-par(mfrow = c(1, 4))
 hist(college$Grad.Rate, breaks = 5, main = "")
 hist(college$Grad.Rate, breaks = 10, main = "")
 hist(college$Grad.Rate, breaks = 20, main = "")
 hist(college$Grad.Rate, breaks = 50, main = "")
 ```
-6. Continue exploring the data, and provide a brief summary
-of what you discover.
 
-```{r}
+I think we have to set the number of bins large enough.
+If the number of bins is too small, the histogram could not show the exact shape of the frequency or the empirical distribution for given data.
+For example, 'Top10perc' and 'Books' seem to have a decreasing shape when the bin number is small.
+However, as the bin number increases, we can find increasing parts in the beginning (near 0).
+
+**6. Continue exploring the data, and provide a brief summary of what you discover.**
+
+Here are pair plots, histograms, and correlation coefficients among variables.
+Since full-pair plots are too big to show, I include only parts of the pair plots.
+
+```{r, echo=FALSE}
 panel.hist <- function(x, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -660,7 +636,7 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
     if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
     text(0.5, 0.5, txt, cex = cex.cor)
 }
-
+par(mfrow=c(1, 1))
 pairs(college[, 2:9],  upper.panel = panel.cor, panel = panel.smooth,
       cex = 1.5, pch = 1, bg = "light blue", horOdd=TRUE,
       diag.panel = panel.hist, cex.labels = 2, font.labels = 2)
@@ -669,17 +645,27 @@ pairs(college[, 10:18],  upper.panel = panel.cor, panel = panel.smooth,
       cex = 1.5, pch = 1, bg = "light blue", horOdd=TRUE,
       diag.panel = panel.hist, cex.labels = 2, font.labels = 2)
 
-round(cor(college[2:18]), 3)
 ```
 
+```{r}
+cor(college[2:18]) > 0.7
+```
+There are strong linear correlations between 
+- Apps-Accept
+- Apps-Enroll
+- Apps-F.Undergrad
+- Accept-Enroll
+- Accept-F.Undergrad
+- Enroll-F.Undergrad
+- Top10perc-Top25perc
+- PhD-Terminal
 
 
 
-\noindent problem16. (James et al. Chapter 2, problem 10.)
-This exercise involves the Boston housing data set.
+### \noindent problem16. 
+**(James et al. Chapter 2, problem 10.) This exercise involves the Boston housing data set.**
 
-1. To begin, load in the Boston data set. The Boston data set is
-part of the MASS library in R.
+**1. To begin, load in the Boston data set. The Boston data set is part of the MASS library in R.**
 ```{r}
 library(MASS)
 data(Boston)
@@ -703,20 +689,33 @@ There 506 rows and 14 columns. Each column is
 - medv : median value of owner-occupied homes in \$1000s.
 
 
-2. Make some pairwise scatterplots of the predictors (columns) in
-this data set. Describe your findings.
-```{r}
-pairs(Boston[,-1],  upper.panel = panel.cor, panel = panel.smooth,
-      cex = 1.5, pch = 1, bg = "light blue", horOdd=TRUE,
-      diag.panel = panel.hist, cex.labels = 2, font.labels = 2)
+**2. Make some pairwise scatterplots of the predictors (columns) in this data set. Describe your findings.**
+
+```{r, fig.height=7.5, echo=FALSE}
+pairs(Boston[,c(-1,-4)],  upper.panel = panel.cor, panel = panel.smooth,
+      cex = 1, pch = 20, bg = "light blue", horOdd=TRUE,
+      diag.panel = panel.hist, cex.labels = 2, font.labels = 1)
 ```
 
+First, 'zn', 'rad', 'tax' and 'black' have uniquely shaped histograms. In the case of the 'zn', most of the points are near 0.
+In contrast, most of points of the 'black' have large values.
+Finally, the 'rad' and 'tax' seem to have two clusters.
 
-3. Are any of the predictors associated with per capita crime rate?
-If so, explain the relationship.
+Next, 'indus'and 'nox', 'indus' and 'age', 'indus' and 'dis', 'nox' and 'age', 'nox' and 'dis'
+'rm' and 'lstat', 'rm' and 'medv', 'lstat' and 'medv' have some increasing/decreasing relatationship.
+However, all cases does not seem perfectly linear. Perhaps, we may get the linear relationship among them by some transformations.
+
+Finally, some fitted resistant lines and correlation coefficients (expecially in the 'rad' and 'tax' case) do not give much useful information. 
+As you can see in these examples, it always seems necessary to check visually through pictures for a EDA procedure.
+
+
+**3. Are any of the predictors associated with per capita crime rate? If so, explain the relationship.**
 
 ```{r}
 cor(Boston)[1,]
+```
+
+```{r, echo=FALSE}
 par(mfrow = c(2,4))
 for(i in 2:9){
   plot(Boston[, i], Boston[, 1], ylab="crim", xlab = names(Boston)[i])
@@ -726,9 +725,19 @@ for(i in 10:14){
 }
 ```
 
-4. Do any of the suburbs of Boston appear to have particularly
-high crime rates? Tax rates? Pupil-teacher ratios? Comment on
-the range of each predictor.
+
+I think 'age' and 'dis' can be associated with the per capita crime rate.
+However, the relations are not linear.
+
+Moreover, 'rad' can be used to predict the per capita crime rates.
+If the value of 'rad' is low, the per capita crime rate tends to be below.
+However, it seems difficult to define the exact relationship,
+because the shape of the dots seems vertical line at the realized maximum 'rad' value.
+
+
+
+**4. Do any of the suburbs of Boston appear to have particularly high crime rates?**
+**Tax rates? Pupil-teacher ratios? Comment on the range of each predictor.**
 
 ```{r}
 par(mfrow=c(1,3))
@@ -739,36 +748,35 @@ boxplot(Boston$crim, xlab ="crim")
 boxplot(Boston$tax, xlab = "tax")
 boxplot(Boston$ptratio, xlab ="ptratio")
 ```
-In the case of crime rate, there are so many data points outside of whiskers.
-We can say thet there are many suburb with particularly high crime rates.
+Especially in the case of crime rate, there are so many data points outside the whiskers.
+Thus, we can say thet there are many suburb with particularly high crime rates.
 
 The maximum value is,
 ```{r}
 Boston[which.max(Boston$crim), ]
 ```
 
-For other two variables, there is no sample that has a particularly high value.
+For the other two variables, there is no sample that has a particularly high value.
 However, for Pupil-teacher ratios, we can see two outliers at the lower side.
 
 
-5. How many of the suburbs in this data set bound the Charles
-river?
+**5. How many of the suburbs in this data set bound the Charles river?**
+
 ```{r}
 sum(Boston$chas)
 ```
-35 suburbs set bound the Charles river.
+There are 35 suburbs which set bound the Charles river.
 
-6. What is the median pupil-teacher ratio among the towns in this
-data set?
+**6. What is the median pupil-teacher ratio among the towns in this data set?**
 ```{r}
 median(Boston$ptratio)
 ```
 The median value of pupil-teacher ratio is 19.05.
 
-7. Which suburb of Boston has lowest median value of owner occupied homes? 
-What are the values of the other predictors
-for that suburb, and how do those values compare to the overall
-ranges for those predictors? Comment on your findings.
+**7. Which suburb of Boston has lowest median value of owner occupied homes?**
+**What are the values of the other predictors for that suburb, and how do those values compare to the overall ranges for those predictors?**
+**Comment on your findings.**
+
 ```{r}
 which.min(Boston$medv)
 Boston[which.min(Boston$medv),]
@@ -778,14 +786,14 @@ compare_table <- rbind(range_table, Boston[which.min(Boston$medv),])
 rownames(compare_table) <- c("min", "max", "the min-medv suburb")
 print(compare_table)
 ```
-The 399th suburb has many extreme values for each predictor.
-For example, its zn and medv values are lowest, and age, rad and black values are highest.
-Not only that, dis, tax, ptratio, and lstat values are close to the maximum or minimum value of each predictor.
 
-8. In this data set, how many of the suburbs average more than
-seven rooms per dwelling? More than eight rooms per dwelling?
-Comment on the suburbs that average more than eight rooms
-per dwelling.
+The 399th suburb has many extreme values for each predictor.
+For example, its 'zn' and 'medv' values are the lowest, and 'age', 'rad', and 'black' values are the highest.
+Not only that, 'dis', 'tax', 'ptratio', and 'lstat' values are close to the maximum or the minimum value of each predictor.
+
+**8. In this data set, how many of the suburbs average more than seven rooms per dwelling?**
+**More than eight rooms per dwelling?**
+**Comment on the suburbs that average more than eight rooms per dwelling.**
 
 ```{r}
 sum(Boston$rm > 7)
@@ -795,8 +803,8 @@ sum(Boston$rm > 8)
 And, only 13 suburbs have more than eight rooms per dwelling on average.
 
 ```{r}
-summary(Boston)
+# summary(Boston)
 summary(Boston[which(Boston$rm > 8),])
 ```
-They have low per capita crime rate, and nox values.
-In addition, they indicates high black, lstat, medv values.
+The 13 suburbs have low per capita crime rates and 'nox' values.
+In addition, they indicates high 'black', 'lstat', and 'medv' values.
