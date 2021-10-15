@@ -1,0 +1,581 @@
+---
+title: "Homework Assignment 2"
+author: "Seokjun Choi"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+
+### \noindent Problem1.
+**(Albert and Rizzo Chapter 3, problem 1.)**
+
+**(Fast food eating preference). Fifteen students in a statistics class**
+**were asked to state their preference among the three restaurants Wendys,**
+**McDonalds, and Subway. The responses for the students are presented below.**
+
+Wendys McDonalds Subway Subway Subway Wendys
+Wendys Subway Wendys Subway Subway Subway
+Subway Subway Subway
+
+**a. Use the scan function to read these data into the R command window.**
+
+```{r}
+# restaurant <- scan(what="character")
+restaurant <- c("Wendys", "McDonalds", "Subway", "Subway", "Subway", "Wendys",
+  "Wendys", "Subway", "Wendys", "Subway", "Subway", "Subway", "Subway",
+  "Subway", "Subway")
+```
+
+Because of compiling Rmd file, I put these data by string vector instead of using the 'scan' function.
+If we use the 'scan' function, we can see below block from R iterpretator.
+
+
+>\> restaurant <- scan(what="character")
+>
+>1: Wendys McDonalds Subway Subway Subway Wendys
+>
+>7: Wendys Subway Wendys Subway Subway Subway
+>
+>13: Subway Subway Subway
+>
+>16: 
+>
+>Read 15 items
+>
+>\> restaurant
+>
+> [1] "Wendys"    "McDonalds" "Subway"    "Subway"    "Subway"    "Wendys"   
+>
+> [7] "Wendys"    "Subway"    "Wendys"    "Subway"    "Subway"    "Subway"
+>
+>[13] "Subway"    "Subway"    "Subway"
+>
+
+
+**b. Use the table function to find the frequencies of students who prefer the three restaurants.**
+
+```{r}
+table(restaurant)
+```
+
+
+**c. Compute the proportions of students in each category.**
+
+```{r}
+restaurant_factor <- factor(restaurant)
+restaurant_prop_table <- table(restaurant_factor) / length(restaurant_factor)
+restaurant_prop_table
+```
+
+**d. Construct two different graphical displays of the proportions.**
+
+```{r}
+plot(restaurant_prop_table, 
+  xlab = "restaurant", ylab = "proportion", main = "prefered restaurant")
+barplot(restaurant_prop_table, 
+  xlab = "restaurant", ylab = "proportion", main = "prefered restaurant")
+```
+
+
+\vspace{1cm}
+
+
+### \noindent Problem2.
+**(Albert and Rizzo Chapter 3, problem 3.)**
+
+**(Does baseball hitting data follow a binomial distribution?).**
+**Albert Pujols is a baseball player who has $n$ opportunities to hit in a single**
+**game. If $y$ denotes the number of hits for a game, then it is reasonable to**
+**assume that $y$ has a binomial distribution with sample size $n$ and probability**
+**of success $p = 0.312$, where $0.312$ is Pujols’ batting average (success rate) for**
+**the 2010 baseball season.**
+
+**a. In 70 games Pujols had exactly $n = 4$ opportunities to hit and the number of hits $y$ in these 70 games is tabulated in the following table.**
+
+|Number of hits | Frequency|
+|---|----|
+| 0 | 17 |
+| 1 | 31 |
+| 2 | 17 |
+|3 or more | 5 |
+
+Use the dbinom function to compute the expected counts and the chisq.test
+function to test if the counts follow a binomial(4, 0.312) distribution.
+
+```{r}
+observed_hit <- c(17, 31, 17, 5)
+names(observed_hit) <- c("0", "1", "2", ">=3")
+expected_prob <- dbinom(0:4, size = 4, prob = 0.312)
+expected_hit <- expected_prob * 70
+collapsed_expected_hit <- c(expected_hit[1:3], sum(expected_hit[4:5]))
+collapsed_expected_prob <- c(expected_prob[1:3], sum(expected_prob[4:5]))
+chisq_test_table <- data.frame(observed_hit, collapsed_expected_hit)
+chisq_test_table
+
+plot(0:3, collapsed_expected_hit, type="h", lwd=2, lty=1, ylab="Count", xlim=c(0,3.5), ylim=c(0, 32), xlab="Category", xaxt = "n")
+axis(1, c(0, 1, 2, 3))
+lines(0:3 + .1, observed_hit, type="h", lwd=2, lty=2)
+legend("topleft", legend=c("expected", "observed"), lty=c(1,2), lwd=c(2,2))
+
+
+chisq_statistic <- sum((observed_hit - collapsed_expected_hit)^2 / collapsed_expected_hit)
+p_val <- 1 - pchisq(chisq_statistic, length(observed_hit)-1)
+
+c(chisq_statistic, p_val)
+
+# R built-in function
+chisq.test(observed_hit, p = collapsed_expected_prob)
+```
+
+The hypotheses are:
+
+H0: the observed 'number of hits' data follow a binomial(4, 0.312) distribution.
+
+H1: Not H0.
+
+The chi-square value is 0.97692, and it follows chi-square distribution with degree of freedom 3 under H0.
+The p value is 0.8068.
+Under a significance level less than 0.8068 (like 0.05 or 0.01), we cannot reject the H0.
+Thus, we cannot say that the data do not follow binomial(4, 0.312) distribution.
+
+```{r}
+chisq.test(observed_hit, p = collapsed_expected_prob)$residual
+```
+All residual values are close to 0.
+
+
+**b. In 25 games Pujols had exactly $n = 5$ opportunities to hit and the number**
+**of hits y in these 25 games is shown in the table below.**
+
+|Number of hits | Frequency|
+|---|----|
+| 0 | 5 |
+| 1 | 5 |
+| 2 | 4 |
+|3 or more | 11 |
+
+Use the chisq.test function to test if the counts follow a binomial(5, 0.312) distribution.
+
+
+```{r}
+observed_hit5 <- c(5, 5, 4, 11)
+names(observed_hit5) <- c("0", "1", "2", ">=3")
+expected_prob5 <- dbinom(0:5, size = 5, prob = 0.312)
+expected_hit5 <- expected_prob5 * 25
+
+collapsed_expected_hit5 <- c(expected_hit5[1:3], sum(expected_hit5[4:6]))
+collapsed_expected_prob5 <- c(expected_prob5[1:3], sum(expected_prob5[4:6]))
+chisq_test_table5 <- data.frame(observed_hit5, collapsed_expected_hit5)
+chisq_test_table5
+
+plot(0:3, collapsed_expected_hit5, type="h", lwd=2, lty=1, ylab="Count", xlim=c(0,3.5), ylim=c(0, 15), xlab="Category", xaxt = "n")
+axis(1, c(0, 1, 2, 3))
+lines(0:3 + .1, observed_hit5, type="h", lwd=2, lty=2)
+legend("topleft", legend=c("expected", "observed"), lty=c(1,2), lwd=c(2,2))
+
+
+chisq.test(observed_hit5, p = collapsed_expected_prob5)
+```
+
+The hypotheses are:
+
+H0: the observed 'number of hits' data follow a binomial(5, 0.312) distribution.
+
+H1: Not H0.
+
+The chi-square statistic value is 13.359, and it follows chi-square distribution with degree of freedom 3 under H0.
+The p value is 0.003922.
+Under a significance level larger than 0.003922 (like 0.05 or 0.01), we can reject the H0.
+Thus, we can say that the data do not follow binomial(5, 0.312) distribution.
+
+However, Let's take a look about the observed values and expected values table.
+The expected value for '>=3' case is less than 5.
+Thus, after collapsing the cagetory, let's repeat the chi-square test procedure.
+
+```{r}
+chisq.test(observed_hit5, p = collapsed_expected_prob5)$residual
+```
+
+The residual of class '>=3' is too large to be considered as coming from the standard normal distribution.
+
+
+```{r}
+collapsed2_observed_hit5 <- c(5, 5, 4 + 11)
+names(observed_hit5) <- c("0", "1", ">=2")
+collapsed2_expected_hit5 <- c(expected_hit5[1:2], sum(expected_hit5[3:6]))
+collapsed2_expected_prob5 <- c(expected_prob5[1:2], sum(expected_prob5[3:6]))
+collapsed2_chisq_test_table5 <- data.frame(collapsed2_observed_hit5, collapsed2_expected_hit5)
+collapsed2_chisq_test_table5
+
+plot(0:2, collapsed2_expected_hit5, type="h", lwd=2, lty=1, ylab="Count", xlim=c(0,2.5), ylim=c(0, 18), xlab="Category", xaxt="n")
+axis(1, 0:2)
+lines(0:2 + .1, collapsed2_observed_hit5, type="h", lwd=2, lty=2)
+legend("topleft", legend=c("expected", "observed"), lty=c(1,2), lwd=c(2,2))
+
+# R built-in function
+chisq.test(collapsed2_observed_hit5, p = collapsed2_expected_prob5)
+```
+
+Again, the hypotheses are
+
+H0: the observed 'number of hits' data follow a binomial(5, 0.312) distribution.
+
+H1: Not H0.
+
+The chi-square value is 2.4815, and it follows chi-square distribution with degree of freedom 2 under H0.
+The p value is 0.2892
+Under a significance level less than 0.2892 (like 0.05 or 0.01), we cannot reject the H0.
+Thus, we cannot say that the data do not follow binomial(5, 0.312) distribution.
+
+Here are residuals.
+```{r}
+chisq.test(collapsed2_observed_hit5, p = collapsed2_expected_prob5)$residual
+```
+All values are close to 0.
+
+Note that test results have varied by how we collapse the categories.
+
+
+\vspace{1cm}
+
+
+### \noindent Problem3.
+**(Albert and Rizzo Chapter 3, problem 4.)**
+3.4 (Categorizing ages in the twins dataset). The variable AGE gives the age (in years) of twin 1.
+
+```{r}
+twins <- read.table("Rx-data/twins.dat.txt", header = TRUE, sep = ",", na.strings = ".")
+names(twins)
+head(twins)
+```
+
+a. Use the cut function on AGE with the breakpoints 30, 40, and 50 to create
+a categorized version of the twin’s age.
+
+```{r}
+categorized_age <- cut(twins$AGE, breaks=c(0,30,40,50, max(twins$AGE)))
+```
+
+b. Use the table function to find the frequencies in the four age categories.
+```{r}
+tb_categorized_age <- table(categorized_age)
+```
+
+c. Construct a graph of the proportions in the four age categories.
+
+```{r}
+proptb_categorized_age <- prop.table(tb_categorized_age)
+barplot(proptb_categorized_age)
+```
+
+
+\vspace{1cm}
+
+
+### \noindent Problem4.
+**(Albert and Rizzo Chapter 3, problem 5.)**
+**3.5 (Relating age and wage in the twins dataset). The variables AGE**
+**and HRWAGEL contain the age (in years) and hourly wage (in dollars) of twin 1.**
+
+**a. Using two applications of the cut function, create a categorized version**
+**of AGE using the breakpoints 30, 40, and 50, and a categorized version of**
+**HRWAGEL using the same breakpoints as in Section 3.3.**
+
+```{r}
+# twins$AGE
+# twins$HRWAGEL
+categorized_age <- cut(twins$AGE, breaks = c(0, 30, 40, 50, max(twins$AGE)))
+categorized_hrwageL <- cut(twins$HRWAGEL, breaks = c(0, 7, 13, 20, 150))
+```
+
+
+**b. Using the categorized versions of AGE and HRWAGEL, construct a contingency table of the two variables using the function table.**
+
+```{r}
+table(categorized_age, categorized_hrwageL)
+```
+
+**c. Use the prop.table function to find the proportions of twins in each age**
+**class that have the different wage groups.**
+
+```{r}
+twin_CT <- prop.table(table(categorized_age, categorized_hrwageL), margin = 1)
+twin_CT
+```
+
+**d. Construct a suitable graph to show how the wage distribution depends on**
+**the age of the twin.**
+
+Here is the mosaic plot.
+```{r}
+plot(prop.table(table(categorized_age, categorized_hrwageL)), ylab = "hourly wage ($)", xlab = "age (year)", main = "twin")
+```
+
+```{r}
+barplot(t(twin_CT), ylim=c(0, 1.3), ylab="hourly wage: PROPORTION",
+  legend.text=dimnames(twin_CT)$categorized_hrwageL,
+  args.legend=list(x = "top"), xlab = "age")
+```
+```{r}
+barplot(t(twin_CT), beside = T, legend.text = dimnames(twin_CT)$categorized_hrwageL,
+ args.legend = list(x = "topright"), 
+ ylab = "hourly wage: PROPORTION", xlab = "age")
+```
+
+**e. Use the conditional proportions in part (c) and the graph in part (d) to**
+**explain the relationship between age and wage of the twins.**
+
+Depending on the age, the hourly wage varies.
+
+In the younger generation under the age of 30, nobody could earn more than 20 dollars in an hour.
+About 45% of 'twin 1' people in this generation class make less or equal than \$ 7 in an hour.
+And, the number of 'twin 1' people in this generation decrease as the wage increase.
+
+About 43% of 'twin 1' people who are between 30 and 40 years old make between $7 and $13 in an hour.
+Comparing to the younger generation, the ratio of people earning too low a wage has decreased.
+Not only that, the ratios of people earning $13~20 and $20~150 in an hour have increased.
+
+'Twin 1' people who are between 40 and 50 years old are earning more money than younger 'twin 1' people.
+About 32% are earning more than $20 in an hour. The other three wage classes have the same proportion.
+
+However, in the case of 'twin 1' people in the oldest group, the wage level decreases again.
+About 35% of 'twin 1' people in this group is earning between $7 and $13 in an hour.
+
+To sum up, the general hourly wage level tends to increase until 50 years old, and then decrease.
+
+
+\vspace{1cm}
+
+
+### \noindent Problem5.
+**(Albert and Rizzo Chapter 3, problem 6.)**
+**3.6 (Relating age and wage in the twins dataset, continued).**
+
+**a. Using the contingency table of the categorized version of AGE and HRWAGEL**
+**and the function chisq.test, perform a test of independence of age and wage.**
+**Based on this test, is there significant evidence to conclude that age and wage are dependent?**
+
+H0: AGE and HRWAGEL are independent
+
+H1: AGE and HRWAGEL are not independent
+
+```{r}
+twins_chisq <- chisq.test(categorized_age, categorized_hrwageL)
+twins_chisq$expected
+twins_chisq$observed
+twins_chisq
+
+```
+
+The chi-square statistic value is 24.771.
+Under H0, the value follows chi-square distribution with d.f. 9.
+The p-value is 0.003235, so we can reject the H0 if we use higher significance level than 0.003235 (like 0.01 or 0.05).
+Thus, we can conclude that the two variables are not independent.
+
+**b. Compute and display the Pearson residuals from the test of independence.**
+**Find the residuals that exceed 2 in absolute value.**
+
+```{r}
+twins_chisq$residuals
+which(abs(twins_chisq$residuals) > 2)
+```
+
+There are two residuals that exceed 2 in absolute value.
+One is age (0,30] with hourly wage (20, 150].
+The other one is age (40,50] with hourly wage (20, 150].
+
+**c. Use the function mosaicplot with the argument shade=TRUE to construct**
+**a mosaic plot of the table counts showing the extreme residuals.**
+
+```{r}
+plot(table(categorized_age, categorized_hrwageL), shade = TRUE)
+# ?plot.table
+```
+Because the class which is age (0,30] with hourly wage (20, 150] has no proportion,
+the class is not visible.
+
+**d. Use the numerical and graphical work from parts (b) and (c) to explain**
+**how the table of age and wages differs from an independence structure.**
+
+If age and wages were independent, the chi-square test would not be rejected.
+Not only that, the size of squares in the mosaic plot would be similar.
+However, as we saw at the test result and the realized mosaic plot, it shows a different pattern from the independent case.
+
+
+\vspace{1cm}
+
+
+### \noindent Problem6.
+**(Albert and Rizzo Chapter 3, problem 8.)**
+**3.8 (Are the digits of $\pi$ random?). The National Institute of Standards**
+**and Technology has a web page that lists the first 5000 digits of the irrational**
+**number $\pi$. One can read these digits into R by means of the script**
+
+
+```{r}
+pidigits <- read.table(
+    "http://www.itl.nist.gov/div898/strd/univ/data/PiDigits.dat",
+     skip = 60)
+head(pidigits)
+```
+
+**a. Use the table function to construct a frequency table of the digits 1 through 9.**
+```{r}
+freq_pidigits <- table(pidigits)
+freq_pidigits
+```
+
+
+**b. Construct a bar plot of the frequencies found in part (a).**
+
+```{r}
+prop_pidigits <- prop.table(freq_pidigits)
+barplot(prop_pidigits, main = "pi's first 5000 digits: proportion")
+```
+
+
+**c. Use the chi-square test, as implemented in the chisq.test function, to**
+**test the hypothesis that the digits 1 through 9 are equally probable in the**
+**digits of $\pi$.**
+
+Let $p_i$ be a probability of $i$ at $\pi$'s digits
+
+H0: digits are equally probable ($p_0 = p_1 = ... = p_9 = 0.1$)
+
+H1: digits are not equally probable ($p_0 = p_1 = ... = p_9 != 0.1$)
+
+```{r}
+chisq.test(freq_pidigits, p = rep(0.1, 10))
+```
+
+The p-value is 0.3224. We cannot reject H0 if we use a significance level less than 0.3224 (like 0.05 or 0.01.)
+Hence, we cannot say that each digit is not equally probable.
+
+
+\vspace{1cm}
+
+
+### \noindent Problem7.
+**(Albert and Rizzo Chapter 5, problem 2.)**
+
+**5.2 (Relationship between the percentages of small classes and large classes).**
+**The variables Pct.20 and Pct.50 in the college dataset contain**
+**respectively the percentage of “small classes” (defined as 20 or fewer students)**
+**and the percentage of “large classes” (defined as 50 or more students) in the National Universities.**
+
+**a. Use the plot function to construct a scatterplot of Pct.20 (horizontal)**
+**against Pct.50 (vertical).**
+
+**b. Use the line function to find a resistant line to these data. Add this**
+**resistant line to the scatterplot constructed in part a.**
+
+**c. If 60% of the classes at a particular college have 20 or fewer students, use**
+**the fitted line to predict the percentage of classes that have 50 or more students.**
+
+**d. Construct a graph of the residuals (vertical) against Pct.20 (horizontal)**
+**and add a horizontal line at zero (using the abline function).**
+
+**e. Is there a distinctive pattern to the residuals? (Compare the sizes of the**
+**residuals for small Pct.20 and the sizes of the residuals for large Pct.50.)**
+
+**f. Use the identify function to identify the schools that have residuals that**
+**exceed 10 in absolute value. Interpret these large residuals in the context**
+**of the problem.**
+
+
+\vspace{1cm}
+
+
+### \noindent Problem8.
+**(Albert and Rizzo Chapter 5, problem 3.)**
+
+**5.3 (Relationship between acceptance rate and “top-ten” percentage).**
+**The variables Accept.rate and Top.10 in the college dataset contain**
+**respectively the acceptance rate and the percentage of incoming students in**
+**the top 10 percent of their high school class in the National Universities.**
+**One would believe that these two variables are strongly associated, since, for**
+**example, "exclusive" colleges with small acceptance rates would be expected**
+**to have a large percentage of "top-ten" students.**
+
+**a. Explore the relationship between Accept.rate and Top.10.**
+**This exploration should include a graph and linear fit that describe the basic pattern**
+**in the relationship and a residual graph that shows how schools differ from**
+**the basic pattern.**
+
+**b. Schools are often classified into "elite" and "non-elite" colleges depending**
+**on the type of students they admit. Based on your work in part a, is there**
+**any evidence from Accept.rate and Top.10 that schools do indeed cluster**
+**into "elite" and "non-elite" groups? Explain.**
+
+
+\vspace{1cm}
+
+
+### \noindent Problem9.
+**(Albert and Rizzo Chapter 5, problem 5.)**
+
+**5.5 (Exploring percentages of full-time faculty).**
+**The variable Full.time in the college dataset (see Example 5.3) contains the percentage of faculty**
+**who are hired full-time in the group of National Universities.**
+
+**a. Using the hist function, construct a histogram of the full-time percentages**
+**and comment on the shape of the distribution.**
+
+**b. Use the froot and flog transformations to reexpress the full-time percentages.**
+**Construct histograms of the collection of froots and the collection of flogs.**
+**Is either transformation successful in making the full-time percentages approximately symmetric?**
+
+**c. For data that is approximately normally distributed, about 68% of the**
+**data fall within one standard deviation of the mean. Assuming you have**
+**found a transformation in part (b) that makes the full-time percentages**
+**approximately normal, find an interval that contains roughly 68% of the**
+**data on the new scale.**
+
+
+\vspace{1cm}
+
+
+### \noindent Problem10.
+**(Albert and Rizzo Chapter 5, problem 6.)**
+**5.6 (Exploring alumni giving rates). The variable Alumni.giving contains**
+**the percentage of alumni from the college who make financial contributions.**
+**a. Construct a “stacked” dotplot of the alumni giving percentages using the**
+**stripchart function.**
+**b. Identify the names of the three schools with unusually large giving percentages.**
+**c. It can be difficult to summarize these giving percentages since the distribution is right-skewed.**
+**One can make the dataset more symmetric by**
+**applying either a square root transformation or a log transformation.**
+
+roots = sqrt(college$Alumni.giving)
+logs = log(college$Alumni.giving)
+
+**Apply both square root and log transformations. Which transformation**
+**makes the alumni giving rates approximately symmetric?**
+
+
+\vspace{1cm}
+
+
+### \noindent Problem11.
+**(Albert and Rizzo Chapter 5, problem 7.)**
+
+**5.7 (Exploring alumni giving rates (continued)).**
+**In this exercise, we focus on the comparison of the alumni giving percentages**
+**between the four tiers of colleges.**
+**a. Using the stripchart function with the stacked option, construct parallel**
+**dotplots of alumni giving by tier.**
+**b. As one moves from Tier 4 to Tier 1, how does the average giving change?**
+**c. As one moves from Tier 4 to Tier 1, how does the spread of the giving**
+**rates change?**
+**d. We note from parts (b) and (c), that small giving rates tend to have**
+**small variation, and large giving rates tend to have large variation. One**
+**way of removing the dependence of average with spread is to apply a**
+**power transformation such as a square root or a log. Construct parallel**
+**stripcharts of the square roots of the giving rates, and parallel boxplots of**
+**the log giving rates.**
+**e. Looking at the two sets of parallel stripcharts in part (d), were the square**
+**root rates or the log rates successful in making the spreads approximately**
+**the same between groups?**
