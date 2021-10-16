@@ -73,9 +73,9 @@ restaurant_prop_table
 **d. Construct two different graphical displays of the proportions.**
 
 ```{r}
-plot(restaurant_prop_table, 
+plot(restaurant_prop_table,
   xlab = "restaurant", ylab = "proportion", main = "prefered restaurant")
-barplot(restaurant_prop_table, 
+barplot(restaurant_prop_table,
   xlab = "restaurant", ylab = "proportion", main = "prefered restaurant")
 ```
 
@@ -115,14 +115,16 @@ collapsed_expected_prob <- c(expected_prob[1:3], sum(expected_prob[4:5]))
 chisq_test_table <- data.frame(observed_hit, collapsed_expected_hit)
 chisq_test_table
 
-plot(0:3, collapsed_expected_hit, type="h", lwd=2, lty=1, ylab="Count", xlim=c(0,3.5), ylim=c(0, 32), xlab="Category", xaxt = "n")
+plot(0:3, collapsed_expected_hit, type = "h", lwd = 2, lty = 1, ylab = "Count",
+  xlim = c(0, 3.5), ylim = c(0, 32), xlab = "Category", xaxt = "n")
 axis(1, c(0, 1, 2, 3))
-lines(0:3 + .1, observed_hit, type="h", lwd=2, lty=2)
-legend("topleft", legend=c("expected", "observed"), lty=c(1,2), lwd=c(2,2))
+lines(0:3 + .1, observed_hit, type = "h", lwd = 2, lty = 2)
+legend("topleft", legend = c("expected", "observed"),
+  lty = c(1, 2), lwd = c(2, 2))
 
 
 chisq_statistic <- sum((observed_hit - collapsed_expected_hit)^2 / collapsed_expected_hit)
-p_val <- 1 - pchisq(chisq_statistic, length(observed_hit)-1)
+p_val <- 1 - pchisq(chisq_statistic, length(observed_hit) - 1)
 
 c(chisq_statistic, p_val)
 
@@ -171,10 +173,13 @@ collapsed_expected_prob5 <- c(expected_prob5[1:3], sum(expected_prob5[4:6]))
 chisq_test_table5 <- data.frame(observed_hit5, collapsed_expected_hit5)
 chisq_test_table5
 
-plot(0:3, collapsed_expected_hit5, type="h", lwd=2, lty=1, ylab="Count", xlim=c(0,3.5), ylim=c(0, 15), xlab="Category", xaxt = "n")
+plot(0:3, collapsed_expected_hit5, type = "h", lwd = 2, lty = 1,
+  ylab = "Count", xlim = c(0, 3.5), ylim = c(0, 15),
+  xlab = "Category", xaxt = "n")
 axis(1, c(0, 1, 2, 3))
-lines(0:3 + .1, observed_hit5, type="h", lwd=2, lty=2)
-legend("topleft", legend=c("expected", "observed"), lty=c(1,2), lwd=c(2,2))
+lines(0:3 + .1, observed_hit5, type = "h", lwd = 2, lty = 2)
+legend("topleft", legend = c("expected", "observed"),
+  lty = c(1, 2), lwd = c(2, 2))
 
 
 chisq.test(observed_hit5, p = collapsed_expected_prob5)
@@ -210,10 +215,13 @@ collapsed2_expected_prob5 <- c(expected_prob5[1:2], sum(expected_prob5[3:6]))
 collapsed2_chisq_test_table5 <- data.frame(collapsed2_observed_hit5, collapsed2_expected_hit5)
 collapsed2_chisq_test_table5
 
-plot(0:2, collapsed2_expected_hit5, type="h", lwd=2, lty=1, ylab="Count", xlim=c(0,2.5), ylim=c(0, 18), xlab="Category", xaxt="n")
+plot(0:2, collapsed2_expected_hit5, type = "h", lwd = 2, lty = 1,
+  ylab = "Count", xlim = c(0, 2.5), ylim = c(0, 18),
+  xlab = "Category", xaxt = "n")
 axis(1, 0:2)
-lines(0:2 + .1, collapsed2_observed_hit5, type="h", lwd=2, lty=2)
-legend("topleft", legend=c("expected", "observed"), lty=c(1,2), lwd=c(2,2))
+lines(0:2 + .1, collapsed2_observed_hit5, type = "h", lwd = 2, lty = 2)
+legend("topleft", legend = c("expected", "observed"),
+  lty = c(1, 2), lwd = c(2, 2))
 
 # R built-in function
 chisq.test(collapsed2_observed_hit5, p = collapsed2_expected_prob5)
@@ -247,7 +255,8 @@ Note that test results have varied by how we collapse the categories.
 3.4 (Categorizing ages in the twins dataset). The variable AGE gives the age (in years) of twin 1.
 
 ```{r}
-twins <- read.table("Rx-data/twins.dat.txt", header = TRUE, sep = ",", na.strings = ".")
+twins <- read.table("Rx-data/twins.dat.txt",
+  header = TRUE, sep = ",", na.strings = ".")
 names(twins)
 head(twins)
 ```
@@ -256,7 +265,7 @@ a. Use the cut function on AGE with the breakpoints 30, 40, and 50 to create
 a categorized version of the twin’s age.
 
 ```{r}
-categorized_age <- cut(twins$AGE, breaks=c(0,30,40,50, max(twins$AGE)))
+categorized_age <- cut(twins$AGE, breaks = c(0, 30, 40, 50, max(twins$AGE)))
 ```
 
 b. Use the table function to find the frequencies in the four age categories.
@@ -311,18 +320,20 @@ twin_CT
 
 Here is the mosaic plot.
 ```{r}
-plot(prop.table(table(categorized_age, categorized_hrwageL)), ylab = "hourly wage ($)", xlab = "age (year)", main = "twin")
+plot(prop.table(table(categorized_age, categorized_hrwageL)),
+  ylab = "hourly wage ($)", xlab = "age (year)", main = "twin")
 ```
 
 ```{r}
-barplot(t(twin_CT), ylim=c(0, 1.3), ylab="hourly wage: PROPORTION",
-  legend.text=dimnames(twin_CT)$categorized_hrwageL,
-  args.legend=list(x = "top"), xlab = "age")
+barplot(t(twin_CT), ylim = c(0, 1.3), ylab = "hourly wage: PROPORTION",
+  legend.text = dimnames(twin_CT)$categorized_hrwageL,
+  args.legend = list(x = "top"), xlab = "age")
 ```
 ```{r}
-barplot(t(twin_CT), beside = T, legend.text = dimnames(twin_CT)$categorized_hrwageL,
- args.legend = list(x = "topright"), 
- ylab = "hourly wage: PROPORTION", xlab = "age")
+barplot(t(twin_CT), beside = T,
+  legend.text = dimnames(twin_CT)$categorized_hrwageL,
+  args.legend = list(x = "topright"),
+  ylab = "hourly wage: PROPORTION", xlab = "age")
 ```
 
 **e. Use the conditional proportions in part (c) and the graph in part (d) to**
@@ -466,24 +477,114 @@ Hence, we cannot say that each digit is not equally probable.
 **respectively the percentage of “small classes” (defined as 20 or fewer students)**
 **and the percentage of “large classes” (defined as 50 or more students) in the National Universities.**
 
+```{r}
+college_dat <- read.table("Rx-data/college.txt", header = TRUE, sep = "\t")
+college_dat <- subset(college_dat, complete.cases(college_dat))
+names(college_dat)
+```
+
 **a. Use the plot function to construct a scatterplot of Pct.20 (horizontal)**
 **against Pct.50 (vertical).**
+```{r}
+plot(college_dat$Pct.20, college_dat$Pct.50,
+  pch = 19, xlab = "Pct.20", ylab = "Pct.50")
+```
 
 **b. Use the line function to find a resistant line to these data. Add this**
 **resistant line to the scatterplot constructed in part a.**
+```{r}
+college_resistant_line_fit <- line(college_dat$Pct.20, college_dat$Pct.50)
+plot(college_dat$Pct.20, college_dat$Pct.50,
+  pch = 19, xlab = "Pct.20", ylab = "Pct.50")
+abline(college_resistant_line_fit, col = "red")
+```
 
 **c. If 60% of the classes at a particular college have 20 or fewer students, use**
 **the fitted line to predict the percentage of classes that have 50 or more students.**
 
+```{r}
+college_resistant_coeff <- coef(college_resistant_line_fit)
+predicted_percentage_pct50 <- 60 * college_resistant_coeff[2] + college_resistant_coeff[1]
+print(predicted_percentage_pct50)
+```
+
+According to the prediction result, about 7.8 percent of classes have 50 or more students.
+
+
 **d. Construct a graph of the residuals (vertical) against Pct.20 (horizontal)**
 **and add a horizontal line at zero (using the abline function).**
+```{r}
+college_resistant_resid <- college_resistant_line_fit$residuals
+plot(college_dat$Pct.20, college_resistant_resid)
+abline(h = 0)
+```
 
 **e. Is there a distinctive pattern to the residuals? (Compare the sizes of the**
 **residuals for small Pct.20 and the sizes of the residuals for large Pct.50.)**
 
+
+```{r}
+plot(college_dat$Pct.20, college_resistant_resid)
+abline(h = 0)
+outlier15_idx <- which(abs(resid) > 15)
+college_dat[outlier15_idx, ]
+college_resistant_resid[outlier15_idx]
+text(college_dat$Pct.20[outlier15_idx], college_resistant_resid[outlier15_idx],
+  labels = college_dat[outlier15_idx, 1], pos = 1)
+```
+
+In the residual plot in (d), we can find some outliers.
+UC San Diego's residual is about 17.7 which is huge relative to other colleges. 
+
+Next, let's draw the residual plot with Pct.50 values.
+
+```{r}
+plot(college_dat$Pct.50, resid)
+abline(h = 0)
+text(college_dat$Pct.50[outlier15_idx], college_resistant_resid[outlier15_idx],
+  labels = college_dat[outlier15_idx, 1], pos = 2)
+```
+
+An existance of a pattern in a residual plot shows that the fit wasn't that good.
+However, clearly, an increasing pattern is visible in this residual plot!
+
+
 **f. Use the identify function to identify the schools that have residuals that**
 **exceed 10 in absolute value. Interpret these large residuals in the context**
 **of the problem.**
+
+```{r}
+# plot(dat$Pct.50, resid)
+# identify(dat$Pct.50, resid, n = 6, labels = dat$School)
+```
+
+The 'identify' function does not work in the R-markdown.
+(we have to click 6 points after the line,
+but we cannot do that during the r-markdown compile process.)
+
+So, I will make the same output in another way.
+```{r}
+plot(college_dat$Pct.50, college_resistant_resid)
+abline(h = 0)
+abline(h = 10, lty = 2)
+abline(h = -10, lty = 2)
+outlier10upper_idx <- which(college_resistant_resid > 10)
+outlier10lower_idx <- which(college_resistant_resid < -10)
+outlier10upper_school <- college_dat$School[outlier10upper_idx]
+outlier10lower_school <- college_dat$School[outlier10lower_idx]
+outlier10upper_school
+outlier10lower_school[3]
+for (i in seq_len(length(outlier10upper_idx))) {
+  text(college_dat$Pct.50[outlier10upper_idx[i]],
+    college_resistant_resid[outlier10upper_idx[i]],
+    labels = outlier10upper_school[i], pos = 2)
+}
+for (i in seq_len(length(outlier10lower_idx))) {
+  text(college_dat$Pct.50[outlier10lower_idx[i]],
+    college_resistant_resid[outlier10lower_idx[i]],
+    labels = outlier10lower_school[i], pos = 4)
+}
+```
 
 
 \vspace{1cm}
@@ -500,15 +601,79 @@ Hence, we cannot say that each digit is not equally probable.
 **example, "exclusive" colleges with small acceptance rates would be expected**
 **to have a large percentage of "top-ten" students.**
 
+```{r}
+names(college_dat)
+
+```
+
+
 **a. Explore the relationship between Accept.rate and Top.10.**
 **This exploration should include a graph and linear fit that describe the basic pattern**
 **in the relationship and a residual graph that shows how schools differ from**
 **the basic pattern.**
 
+```{r}
+par(mfrow = c(1, 2))
+plot(college_dat$Top.10, college_dat$Accept.rate)
+college_t10_ar_resistant_line_fit <- line(college_dat$Top.10, college_dat$Accept.rate)
+coef(college_t10_ar_resistant_line_fit)
+abline(college_t10_ar_resistant_line_fit, col = "red")
+
+college_t10_ar_resid <- college_t10_ar_resistant_line_fit$residuals
+plot(college_dat$Top.10, college_t10_ar_resid, ylim = c(-32, 52))
+abline(h = 0)
+abline(h = c(-30, 30), lty = 2)
+
+```
+
+Bayesically, 'Top.10' are negatively correlated with 'Accept.rate'.
+The slope of Tukey's resistant line is -0.575. So, students who were in the top ten
+percent of their high school class is more likely to enter college that have low acceptance rate.
+
+Most residuals are between -30 and 30.
+However, we can find two exceptional residual values in the upper-right hand corner of the residual plot.
+
+
 **b. Schools are often classified into "elite" and "non-elite" colleges depending**
 **on the type of students they admit. Based on your work in part a, is there**
 **any evidence from Accept.rate and Top.10 that schools do indeed cluster**
 **into "elite" and "non-elite" groups? Explain.**
+
+Let me add an auxiliary line at Top.10 = 60.
+
+```{r}
+par(mfrow = c(1, 2))
+plot(college_dat$Top.10, college_dat$Accept.rate)
+abline(college_t10_ar_resistant_line_fit, col = "red")
+abline(v = 60, lty = 2, col = "blue")
+
+plot(college_dat$Top.10, college_t10_ar_resid, ylim = c(-32, 52))
+abline(h = 0)
+abline(h = c(-30, 30), lty = 2)
+abline(v = 60, lty = 2, col = "blue")
+```
+
+Yes. If we compare the left part with the right part, we can try creating a cluster.
+Most students in non-elite group entered colleges which have high acceptance rates.
+And, the points corresponding to the non-elite students are pretty well put together.
+
+In contrast, students in elite group tend to go to low-acceptance-rate collages.
+However, in the data points of elite group, acceptance rates have great volatility, with some outliers.
+
+To see it more clearly, I'm going to draw two more pictures: the stripchart and the boxplot of our data.
+
+```{r}
+par(mfrow = c(1, 2))
+college_dat$elite <- college_dat$Top.10 > 60
+stripchart(Accept.rate ~ elite, method = "stack", pch = 19,
+  xlab = "Acceptance rate",
+  ylab = "Elite", data = college_dat)
+
+boxplot(Accept.rate ~ elite, data = college_dat, horizontal = TRUE)
+```
+
+Two boxes in the boxplot do not overlap at all.
+Two median value are quite far.
 
 
 \vspace{1cm}
@@ -565,6 +730,9 @@ logs = log(college$Alumni.giving)
 **5.7 (Exploring alumni giving rates (continued)).**
 **In this exercise, we focus on the comparison of the alumni giving percentages**
 **between the four tiers of colleges.**
+
+
+
 **a. Using the stripchart function with the stacked option, construct parallel**
 **dotplots of alumni giving by tier.**
 **b. As one moves from Tier 4 to Tier 1, how does the average giving change?**
