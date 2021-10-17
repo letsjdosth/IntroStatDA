@@ -526,7 +526,7 @@ abline(h = 0)
 ```{r}
 plot(college_dat$Pct.20, college_resistant_resid)
 abline(h = 0)
-outlier15_idx <- which(abs(resid) > 15)
+outlier15_idx <- which(abs(college_resistant_resid) > 15)
 college_dat[outlier15_idx, ]
 college_resistant_resid[outlier15_idx]
 text(college_dat$Pct.20[outlier15_idx], college_resistant_resid[outlier15_idx],
@@ -539,7 +539,7 @@ UC San Diego's residual is about 17.7 which is huge relative to other colleges.
 Next, let's draw the residual plot with Pct.50 values.
 
 ```{r}
-plot(college_dat$Pct.50, resid)
+plot(college_dat$Pct.50, college_resistant_resid)
 abline(h = 0)
 text(college_dat$Pct.50[outlier15_idx], college_resistant_resid[outlier15_idx],
   labels = college_dat[outlier15_idx, 1], pos = 2)
@@ -673,7 +673,7 @@ boxplot(Accept.rate ~ elite, data = college_dat, horizontal = TRUE)
 ```
 
 Two boxes in the boxplot do not overlap at all.
-Two median value are quite far.
+Two median values are also quite far.
 
 
 \vspace{1cm}
@@ -689,15 +689,103 @@ Two median value are quite far.
 **a. Using the hist function, construct a histogram of the full-time percentages**
 **and comment on the shape of the distribution.**
 
+```{r}
+names(college_dat)
+par(mfrow = c(1, 1))
+hist(college_dat$Full.time, main = "", breaks = 50, xlim = c(0, 100))
+```
+
+The 'Full.time' variables are the percentages of faculty who are hired full-time, 
+so each variable can have a value between 0 and 100.
+However, interestingly, most data values in the data have higher than 65.
+The shape of the distribution is very left-skewed. There is one peak, about 90.
+
 **b. Use the froot and flog transformations to reexpress the full-time percentages.**
 **Construct histograms of the collection of froots and the collection of flogs.**
 **Is either transformation successful in making the full-time percentages approximately symmetric?**
+
+Following the notation of Albert and Rizzo, p146, the folded functions are defined by
+
+\[ff = f - (1-f)\]
+\[froot = \sqrt{f} - \sqrt{1-f}\]
+\[flog = log(f) - log(1-f)\]
+
+```{r}
+collage_fulltime_perc <- college_dat$Full.time / 100
+froot_fulltime <- sqrt(collage_fulltime_perc) - sqrt(1 - collage_fulltime_perc)
+flog_fulltime <- log(collage_fulltime_perc) - log(1 - collage_fulltime_perc)
+```
+
+Note that there are two 'Inf' value in the 'flog_fulltime'
+because two data points of 'collage_fulltime_perc' are 1.
+```{r}
+which(collage_fulltime_perc == 1.00)
+flog_fulltime[c(35, 100)]
+```
+
+
+Let me draw histograms.
+(Automatically, two Inf values are ignored.)
+
+```{r}
+par(mfrow = c(1, 2))
+hist(froot_fulltime, breaks = 50, main = "")
+hist(flog_fulltime, breaks = 70, main = "")
+```
+
+For both cases, The asymmetry has disappeared considerably.
+For this data, it seems that the right side ('flog' transformation) is more effective.
+
 
 **c. For data that is approximately normally distributed, about 68% of the**
 **data fall within one standard deviation of the mean. Assuming you have**
 **found a transformation in part (b) that makes the full-time percentages**
 **approximately normal, find an interval that contains roughly 68% of the**
 **data on the new scale.**
+
+For put 68% portion to the center, 
+we just need to find $0.16$ and $1-0.16=0.84$ quantile of the given data.
+
+For froot-transformed data,
+
+```{r}
+froot_fulltime_mean <- mean(froot_fulltime)
+froot_fulltime_sd <- sd(froot_fulltime)
+
+froot_fulltime_1sigma_interval <- c(froot_fulltime_mean - froot_fulltime_sd,
+  froot_fulltime_mean + froot_fulltime_sd)
+froot_fulltime_emp_68 <- quantile(froot_fulltime, probs = c(0.16, 0.84))
+
+froot_fulltime_table <- rbind(froot_fulltime_1sigma_interval, froot_fulltime_emp_68)
+colnames(froot_fulltime_table) <- c("lower", "upper")
+froot_fulltime_table
+```
+
+The one-sigma interval and the range of 68% quantile interval are quite similar.
+So, if we only consider the boundary value of the 1-sigma interval,
+the froot-transformed 'Full.time' data have a similar characteristic to normal distribution.
+So, we can say that the data are approximately normally distributed.
+
+Next, let me work with flog-transformed data.
+If we include two 'Inf' data points, this work gets meaningless.
+Thus, I will exclude the two points.
+
+```{r}
+flog_fulltime <- flog_fulltime[-which(flog_fulltime == Inf)]
+flog_fulltime_mean <- mean(flog_fulltime)
+flog_fulltime_sd <- sd(flog_fulltime)
+
+flog_fulltime_1sigma_interval <- c(flog_fulltime_mean - flog_fulltime_sd,
+  flog_fulltime_mean + flog_fulltime_sd)
+flog_fulltime_emp_68 <- quantile(flog_fulltime, probs = c(0.16, 0.84))
+
+flog_fulltime_table <- rbind(flog_fulltime_1sigma_interval, flog_fulltime_emp_68)
+colnames(flog_fulltime_table) <- c("lower", "upper")
+flog_fulltime_table
+```
+
+Again, the one-sigma interval and the range of 68% quantile interval are quite similar.
+We can draw same conclusion.
 
 
 \vspace{1cm}
@@ -707,9 +795,44 @@ Two median value are quite far.
 **(Albert and Rizzo Chapter 5, problem 6.)**
 **5.6 (Exploring alumni giving rates). The variable Alumni.giving contains**
 **the percentage of alumni from the college who make financial contributions.**
+
+```{r}
+names(college_dat)
+college_dat$Alumni.giving
+```
+
 **a. Construct a “stacked” dotplot of the alumni giving percentages using the**
 **stripchart function.**
+
+```{r}
+par(mfrow = c(1, 1))
+stripchart(college_dat$Alumni.giving, method = "stack",
+  pch = 19, xlab = "Alumni.giving")
+```
+
+The distribution has a long tail on the right. (right-skewed)
+
+
 **b. Identify the names of the three schools with unusually large giving percentages.**
+
+I think that we may use 'identify' function in R for this work.
+However, because of r-markdown compiling, I will use 'which' function instead.
+```{r}
+# note: I picked '45 using stripchart
+college_dat[which(college_dat$Alumni.giving > 45), c("School", "Alumni.giving")]
+```
+
+The three schools are Princeton, Dartmouth, and Notre Dame.
+```{r}
+par(mfrow = c(1, 1))
+high3_alumni_giving_idx <- which(college_dat$Alumni.giving > 45)
+stripchart(college_dat$Alumni.giving, method = "stack",
+  pch = 19, xlab = "Alumni.giving", main = "Alumni giving rate")
+text(college_dat$Alumni.giving[high3_alumni_giving_idx], 1,
+  labels = college_dat[which(college_dat$Alumni.giving > 45), c("School")],
+  pos = 4, srt = 90)
+```
+
 **c. It can be difficult to summarize these giving percentages since the distribution is right-skewed.**
 **One can make the dataset more symmetric by**
 **applying either a square root transformation or a log transformation.**
@@ -719,6 +842,32 @@ logs = log(college$Alumni.giving)
 
 **Apply both square root and log transformations. Which transformation**
 **makes the alumni giving rates approximately symmetric?**
+
+```{r}
+college_sqrt_alumni_giving <- sqrt(college_dat$Alumni.giving)
+college_log_alumni_giving <- log(college_dat$Alumni.giving)
+
+par(mfrow = c(3, 1))
+stripchart(college_dat$Alumni.giving, method = "stack",
+  pch = 19, xlab = "Alumni.giving", main = "Alumni giving rate")
+stripchart(college_sqrt_alumni_giving, method = "stack",
+  main = "sqrt(Alumni giving ratio)", pch = 19)
+stripchart(college_log_alumni_giving, method = "stack",
+  main = "log(Alumni giving ratio)", pch = 19)
+
+par(mfrow = c(3, 1))
+boxplot(college_dat$Alumni.giving, horizontal = TRUE, main = "Alumni giving rate")
+boxplot(college_sqrt_alumni_giving, horizontal = TRUE, main = "sqrt(Alumni giving ratio)")
+boxplot(college_log_alumni_giving, horizontal = TRUE, main = "log(Alumni giving ratio)")
+```
+
+In the stripcharts, we can find that both two transforms make the data points more symmetric.
+In addition, at the boxplots, we can see median, quartiles, and whiskers by our eye.
+After either square root or log transformation (center and below plots), 
+boxes and whiskers have got more symmetric,
+and the number of outliers has been reduced.
+
+In my opinion, log transform has been more effective in this case.
 
 
 \vspace{1cm}
