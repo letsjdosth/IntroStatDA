@@ -38,6 +38,7 @@ pairs(trees)
 attach(trees)
 M1 <- lm(Volume ~ Girth)
 summary(M1)
+anova(M1)
 
 M2 <- lm(Volume ~ Girth + Height)
 summary(M2)
@@ -60,3 +61,14 @@ anova(M3)
 
 #compare
 anova(M1, M2, M3)
+((421-186)/1) / (186.01/27)
+
+#f statistic
+# ((SSE_base - SSE_new)/1)/(SSE_base/new_n-1)
+
+
+#prediction
+diameter <- 16
+height <- seq(65, 70, 1)
+new <- data.frame(girth = diameter, Height = height)
+predict(M3, new)
