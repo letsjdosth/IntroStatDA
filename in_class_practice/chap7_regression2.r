@@ -1,4 +1,4 @@
-CPUspeed <- read.table("Rx-data/CPUspeed.txt", header=TRUE)
+CPUspeed <- read.table("Rx-data/CPUspeed.txt", header = TRUE)
 names(CPUspeed)
 attach(CPUspeed)
 
@@ -31,3 +31,7 @@ plot(L)
 #============================================================
 data(swiss)
 head(swiss) #2^6 (2 to the 6) models are possible
+names(swiss)
+attach(swiss)
+swiss_model <- lm(Fertility~1)
+add1(swiss_model, .~Agriculture + Examination + Education + Catholic + Infant.Mortality)
