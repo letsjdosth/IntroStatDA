@@ -1,0 +1,282 @@
+---
+title: "Homework Assignment 3"
+author: "Seokjun Choi"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+### \noindent Problem1.
+**Albert and Rizzo, Chapter 4, problem 3**
+
+**4.3 (Speed and stopping distance (continued)).**
+
+**a. Construct a residual plot for the linear fit by typing**
+
+**plot(cars$speed, fit.linear$residual)**
+
+
+**b. Add a blue, thick (lwd=3) horizontal line to the residual plot using the**
+**abline function.**
+
+
+**c. There are two large positive residuals in this graph. By two applications**
+**of the text function, label each residual using the label “POS” in blue.**
+
+
+**d. Label the one large negative residual in the graph with the label “NEG”**
+**in red.**
+
+```{r}
+#a
+library(datasets)
+data(cars)
+cars_fit_linear <- lm(dist ~ speed, data = cars)
+plot(cars$speed, cars_fit_linear$residual)
+
+#b
+abline(h = 0, lwd = 3, col = "blue")
+
+#c
+large_pos_res_idx <- which(cars_fit_linear$residual > 40)
+text(cars$speed[large_pos_res_idx], 
+  cars_fit_linear$residuals[large_pos_res_idx], label = "POS",
+  col = "blue", pos = 1)
+
+#d
+large_neg_res_idx <- which.min(cars_fit_linear$residual)
+text(cars$speed[large_neg_res_idx], 
+  cars_fit_linear$residuals[large_neg_res_idx], label = "NEG",
+  col = "red", pos = 3)
+```
+
+**e. Use the identify function to find the row numbers of two observations**
+**that have residuals close to zero.**
+
+Because we cannot use the 'identify' function during R markdown compile process,
+I will use which function instead.
+
+```{r}
+abs_resid <- abs(cars_fit_linear$residuals)
+which(abs_resid <= sort(abs_resid)[2])
+```
+
+Points at the 17th and the 18th rows are close to zero.
+
+
+### \noindent Problem2.
+
+**Albert and Rizzo, Chapter 4, problem 4**
+
+**4.4 (Multiple graphs). The dataset mtcars contains measurements of fuel**
+**consumption (variable mpg) and other design and performance characteristics**
+**for a group of 32 automobiles. Using the mfrow argument to par, construct**
+**scatterplots of each of the four variables disp (displacement), wt (weight), hp**
+**(horsepower), drat (rear axle ratio) with mileage (mpg) on a two by two array.**
+**Comparing the four graphs, which variable among displacement, weight,**
+**horsepower, and rear axle ratio has the strongest relationship with mileage?**
+
+```{r}
+data(mtcars)
+names(mtcars)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+plot(mtcars$disp, mtcars$mpg)
+plot(mtcars$wt, mtcars$mpg)
+plot(mtcars$hp, mtcars$mpg)
+plot(mtcars$drat, mtcars$mpg)
+cor(mtcars)["mpg", c("disp", "wt", "hp", "drat")]
+```
+
+Both by graphs and by correlation values show that
+'wt' (weight) has the strongest relationship with 'mpg' (mileage) among the four variables.
+
+
+### \noindent Problem3.
+
+**Albert and Rizzo, Chapter 4, problem 6**
+
+**4.6 (Drawing beta density curves). Suppose one is interesting in displaying**
+**three members of the beta family of curves, where the beta density with**
+**shape parameters a and b (denoted by Beta(a, b)) is given by**
+\[f(y) = \frac{1}{B(a,b)} y^{a-1} (1-y)^{b-1}, 0< y < 1\]
+**One can draw a single beta density, say with shape parameters $a = 5$ and**
+**$b = 2$, using the curve function:**
+
+**curve(dbeta(x, 5, 2), from = 0, to = 1)**
+
+**a. Use three applications of the curve function to display the Beta(2, 6),**
+**Beta(4, 4), and Beta(6, 2) densities on the same plot. (The curve function**
+**with the add=TRUE argument will add the curve to the current plot.)**
+
+**b. Use the following R command to title the plot with the equation of the beta density.**
+
+**title(expression(f(y)==frac(1,B(a,b))*y^{a-1}*(1-y)^{b-1}))**
+
+**c. Using the text function, label each of the beta curves with**
+**the corresponding values of the shape parameters a and b.**
+
+```{r}
+#a
+curve(dbeta(x, 2, 6), from = 0, to = 1)
+curve(dbeta(x, 4, 4), add = TRUE)
+curve(dbeta(x, 6, 2), add = TRUE)
+
+#b
+title(expression(f(y) == frac(1, B(a,b))*y^{a-1}*(1-y)^{b-1}))
+
+#c
+text(0.01, 2.5, pos = 4, label = "a=2, b=6")
+text(0.5, 2.25, label = "a=4, b=4")
+text(0.99, 2.5, pos = 2, label = "a=6, b=2")
+```
+
+**d. Redraw the graph using different colors or line types for the three beta**
+**density curves.**
+
+**e. Instead of using the text function, add a legend to the graph that shows**
+**the color or line type for each of the beta density curves.**
+
+```{r}
+#d
+curve(dbeta(x, 2, 6), from = 0, to = 1)
+curve(dbeta(x, 4, 4), add = TRUE, col = "red")
+curve(dbeta(x, 6, 2), add = TRUE, col = "blue")
+title(expression(f(y) == frac(1, B(a,b))*y^{a-1}*(1-y)^{b-1}))
+
+#e
+legend("top", lty = c(1,1,1), col = c("black", "red", "blue"),
+  legend = c("a=2, b=6", "a=4, b=4", "a=6, b=2"), inset=0.02)
+```
+
+
+### \noindent Problem4.
+Albert and Rizzo, Chapter 6, problem 3 (a and b)
+
+6.3 (Ages of marathoners, continued). From the information in the 2005
+report, one may believe that men marathoners tend to be older than women
+marathons.
+
+a. Use the t.test function to construct a test of the hypothesis that the mean
+ages of women and men marathoners are equal against the alternative
+hypothesis that the mean age of men is larger.
+
+b. Construct a 90% interval estimate for the difference in mean ages of men
+and women marathoners.
+
+
+### \noindent Problem5.
+Albert and Rizzo, Chapter 6, problem 4
+
+6.4 (Measuring the length of a string). An experiment was performed
+in an introductory statistics class to illustrate the concept of measurement
+bias. The instructor held up a string in front of the class and each student
+guessed at the string's length. The following are the measurements from the
+
+24 students (in inches).
+
+22 18 27 23 24 15 26 22 24 25 24 18
+18 26 20 24 27 16 30 22 17 18 22 26
+
+a. Use the scan function to enter these measurements into R.
+
+b. The true length of the string was 26 inches. Assuming that this sample of
+measurements represents a random sample from a population of student
+measurements, use the t.test function to test the hypothesis that the
+mean measurement $\mu$ is different from 26 inches.
+
+c. Use the t.test function to find a 90% confidence interval for the population mean $\mu$.
+
+d. The t-test procedure assumes the sample is from a population that is
+normally distributed. Construct a normal probability plot of the measurements
+and decide if the assumption of normality is reasonable.
+
+
+### \noindent Problem6.
+Albert and Rizzo, Chapter 6, problem 6 (a and b)
+
+6.6 (Comparing Etruscan and modern Italian skulls). Researchers
+were interested if ancient Etruscans were native to Italy. 
+The dataset“Etruscan-Italian.txt” contains the skull measurements 
+from a group of Etruscans and modern Italians. 
+There are two relevant variables in the dataset: x is the skull
+measurement and group is the type of skull.
+
+a. Assuming that the data represent independent samples from normal distributions,
+use the t.test function to test the hypothesis that the mean
+Etruscan skull measurement $\mu_E$ is equal to the mean Italian skull measurement $\mu_I$ .
+b. Use the t.test function to construct a 95% interval estimate 
+for the difference in means $\mu_E - \mu_I$.
+c. Use the two-sample Wilcoxon procedure implemented in the function
+wilcox.test to find an alternative 95% interval estimate for the difference
+$\mu_E - \mu_I$.
+
+
+
+### \noindent Problem7.
+Albert and Rizzo, Chapter 6, problem 7
+
+6.7 (President's heights). In Example 1.2, the height of the election winner
+and loser were collected for the U.S. Presidential elections of 1948 through 2008.
+Suppose you are interested in testing the hypothesis that the mean
+height of the election winner is equal to the mean height of the election loser.
+Assuming that this data represent paired data from a hypothetical population
+of elections, use the t.test function to test this hypothesis. Interpret the
+results of this test.
+
+
+### \noindent Problem8.
+Albert and Rizzo, Chapter 7, problem 5
+
+7.5 (Hubble's Law). In 1929 Edwin Hubble investigated the relationship
+between distance and velocity of celestial objects. 
+Knowledge of this relationship might give clues as to how the universe was
+formed and what may happen in the future. 
+Hubble's Law is 
+\[Recession Velocity = H_0 \times Distance \]
+where $H_0$ is Hubble's constant. This model is a straight line through the origin
+with slope $H_0$. Data that Hubble used to estimate the constant $H_0$ are given
+on the DASL web at http://lib.stat.cmu.edu/DASL/Datafiles/Hubble.html.
+Use the data to estimate Hubble's constant by simple linear regression.
+
+
+### \noindent Problem9.
+Albert and Rizzo, Chapter 7, problem 7
+
+7.7 (cars data). For the cars data in Example 7.1, compare the coefficient
+of determination $R^2$ for the two models (with and without intercept term in
+the model). Hint: Save the fitted model as L and use summary(L) to display
+$R^2$. Interpret the value of $R^2$ as a measure of the fit.
+
+### \noindent Problem10.
+Albert and Rizzo, Chapter 7, problem 11
+
+7.11 (twins data). Import the data file "twins.txt" using read.table. (The
+commands to read this data file are shown in the twins example in Section
+3.3, page 85.) The variable DLHRWAGE is the difference (twin 1 minus twin 2)
+in the logarithm of hourly wage, given in dollars. The variable HRWAGEL is
+the hourly wage of twin 1. Fit and analyze a simple linear regression model
+to predict the difference DLHRWAGE given the logarithm of the hourly wage of
+twin 1.
+
+
+### \noindent Problem11.
+James et al., Chapter 2, problem 10  
+
+### \noindent Problem12.
+James et al., Chapter 3, problem 1
+
+### \noindent Problem13.
+James et al., Chapter 3, problem 3
+
+### \noindent Problem14.
+James et al., Chapter 3, problem 8
+
+### \noindent Problem15.
+James et al., Chapter 3, problem 9
+
+### \noindent Problem16.
+James et al., Chapter 3, problem 10
