@@ -154,93 +154,405 @@ legend("top", lty = c(1,1,1), col = c("black", "red", "blue"),
 
 
 ### \noindent Problem4.
-Albert and Rizzo, Chapter 6, problem 3 (a and b)
+**Albert and Rizzo, Chapter 6, problem 3 (a and b)**
 
-6.3 (Ages of marathoners, continued). From the information in the 2005
-report, one may believe that men marathoners tend to be older than women
-marathons.
+**6.3 (Ages of marathoners, continued). From the information in the 2005**
+**report, one may believe that men marathoners tend to be older than women**
+**marathons.**
 
-a. Use the t.test function to construct a test of the hypothesis that the mean
-ages of women and men marathoners are equal against the alternative
-hypothesis that the mean age of men is larger.
+```{r}
+marathoners <- read.csv("Rx-data/nyc-marathon.csv")
+head(marathoners)
+marathoners$Gender <- factor(marathoners$Gender)
 
-b. Construct a 90% interval estimate for the difference in mean ages of men
-and women marathoners.
+```
+
+
+
+**a. Use the t.test function to construct a test of the hypothesis that the mean**
+**ages of women and men marathoners are equal against the alternative**
+**hypothesis that the mean age of men is larger.**
+
+First, let's do EDA.
+```{r}
+par(mfrow = c(1, 3))
+plot(marathoners$Gender, marathoners$Age, xlab = "Gender", ylab = "Age")
+hist(marathoners$Age[which(marathoners$Gender == "female")],
+  xlab = "female", xlim = c(20, 75), breaks = 50)
+hist(marathoners$Age[which(marathoners$Gender == "male")],
+  xlab = "male", xlim = c(20, 75), breaks = 50)
+
+par(mfrow = c(1, 2))
+qqnorm(marathoners$Age[which(marathoners$Gender == "female")],
+  main="normal Q-Q plot (female)")
+qqnorm(marathoners$Age[which(marathoners$Gender == "male")], 
+  main="normal Q-Q plot (male)")
+
+
+c(mean(marathoners$Age[which(marathoners$Gender == "female")]),
+  mean(marathoners$Age[which(marathoners$Gender == "male")]))
+
+c(var(marathoners$Age[which(marathoners$Gender == "female")]),
+  var(marathoners$Age[which(marathoners$Gender == "male")]))
+```
+
+Two variances seem different, but let's conduct a test for variance 
+to check whether they are statistically different or not.
+
+```{r}
+var.test(Age ~ Gender, data = marathoners)
+```
+
+The p-value is 0.05602. If we use significance level as 0.05, we cannot reject the H0 technically.
+However, the p-value is so close to 0.05. So, I will do t-tests of both two versions (equal var / non-eqal var).
+
+First, assume that two gender groups have non-equal variances of their ages.
+
+H0 : mean of women = mean of men
+H1 : mean of women < mean of men , or mean of women - mean of men < 0
+
+```{r}
+marathoners_ttest<- t.test(Age ~ Gender, data = marathoners, alternative = "less")
+marathoners_ttest
+```
+
+The p-value is 0.009495. If we use a significance level higher than 0.009495 (like 0.05 or 0.01,)
+we can reject H0. Thus, Two gender groups don't have the same mean value of age.
+
+
+Next, suppose that two gender groups have the same variance.
+The hypothesis is same as above case.
+```{r}
+marathoners_ttest_equalvar<- t.test(Age ~ Gender, data = marathoners, alternative = "less", var.equal = TRUE)
+marathoners_ttest_equalvar
+```
+
+The t-value, the degrees of freedom, and p-value are different from above case,
+but anyway the p-value is 0.007443. This is smaller than common significance levels like 0.05 or 0.01.
+We can reject H0 under 0.05 or 0.01 significance levels.
+Thus, Two gender groups don't have the same mean value of age.
+
+
+**b. Construct a 90% interval estimate for the difference in mean ages of men**
+**and women marathoners.**
+
+```{r}
+t.test(Age ~ Gender, data = marathoners, alternative = "less",
+  conf.level = 0.9)$conf.int
+t.test(Age ~ Gender, data = marathoners, alternative = "less",
+  var.equal = TRUE, conf.level = 0.9)$conf.int
+```
+The 90% confidence interval is $(\infty, -1.420086)$ under the different variance assumption,
+and $(\infty, 1.359311)$ under the equal-variance assumption.
+
 
 
 ### \noindent Problem5.
-Albert and Rizzo, Chapter 6, problem 4
+**Albert and Rizzo, Chapter 6, problem 4**
 
-6.4 (Measuring the length of a string). An experiment was performed
-in an introductory statistics class to illustrate the concept of measurement
-bias. The instructor held up a string in front of the class and each student
-guessed at the string's length. The following are the measurements from the
+**6.4 (Measuring the length of a string). An experiment was performed**
+**in an introductory statistics class to illustrate the concept of measurement**
+**bias. The instructor held up a string in front of the class and each student**
+**guessed at the string's length. The following are the measurements from the**
 
-24 students (in inches).
+**24 students (in inches).**
 
 22 18 27 23 24 15 26 22 24 25 24 18
 18 26 20 24 27 16 30 22 17 18 22 26
 
-a. Use the scan function to enter these measurements into R.
+**a. Use the scan function to enter these measurements into R.**
 
-b. The true length of the string was 26 inches. Assuming that this sample of
-measurements represents a random sample from a population of student
-measurements, use the t.test function to test the hypothesis that the
-mean measurement $\mu$ is different from 26 inches.
+The 'scan' function does not work in the R markdown compiling process.
+Thus, I make the data vector directly instead.
 
-c. Use the t.test function to find a 90% confidence interval for the population mean $\mu$.
+```{r}
+stringlen <- c(22, 18, 27, 23, 24, 15, 26, 22, 24, 25, 24, 18,
+18, 26, 20, 24, 27, 16, 30, 22, 17, 18, 22, 26)
 
-d. The t-test procedure assumes the sample is from a population that is
-normally distributed. Construct a normal probability plot of the measurements
-and decide if the assumption of normality is reasonable.
+# EDA
+par(mfrow = c(1, 3))
+boxplot(stringlen, main = "gueessed string-length")
+hist(stringlen, breaks = 10, main = "", xlab = "")
+qqnorm(stringlen)
+qqline(stringlen)
+summary(stringlen)
+```
+
+The mean value is 22.25.
+
+**b. The true length of the string was 26 inches. Assuming that this sample of**
+**measurements represents a random sample from a population of student**
+**measurements, use the t.test function to test the hypothesis that the**
+**mean measurement $\mu$ is different from 26 inches.**
+
+Hypotheses are
+H0 : $\mu = 26$
+H1 : $\mu \neq 26$
+
+```{r}
+stringlen_ttest <- t.test(stringlen, alternative = "two.sided", mu = 26)
+stringlen_ttest
+```
+
+The T statistic is -4.6148, which follows student's t distribution with the degree of freedom 23 under H0.
+The p-value is 0.0001216, so we can reject H0 with a significance level higher than 0.0001216, like 0.05 or 0.01.
+Thus, under these level, $\mu$ is not 26.
+
+
+**c. Use the t.test function to find a 90% confidence interval for the population mean $\mu$.**
+```{r}
+t.test(stringlen, alternative = "two.sided", mu = 26, conf.level = 0.9)$conf.int
+```
+
+The 90% confidence interval of $\mu$ is $(20.8573, 23.6427)$.
+
+**d. The t-test procedure assumes the sample is from a population that is**
+**normally distributed. Construct a normal probability plot of the measurements**
+**and decide if the assumption of normality is reasonable.**
+
+In the EDA at the problem (a), I already draw the normal probability plot (or normal Q-Q plot),
+but I repeat it here.
+
+```{r}
+par(mfrow = c(1, 1))
+qqnorm(stringlen)
+qqline(stringlen)
+```
+
+Unfortunately, Q-Q plot's points are not on a line.
+This can be confirmed again in the histogram result of (a).
+So, the normality assumption does not seem resonable in this case.
+
 
 
 ### \noindent Problem6.
-Albert and Rizzo, Chapter 6, problem 6 (a and b)
+**Albert and Rizzo, Chapter 6, problem 6 (a and b)**
 
-6.6 (Comparing Etruscan and modern Italian skulls). Researchers
-were interested if ancient Etruscans were native to Italy. 
-The dataset“Etruscan-Italian.txt” contains the skull measurements 
-from a group of Etruscans and modern Italians. 
-There are two relevant variables in the dataset: x is the skull
-measurement and group is the type of skull.
+**6.6 (Comparing Etruscan and modern Italian skulls). Researchers**
+**were interested if ancient Etruscans were native to Italy.**
+**The dataset“Etruscan-Italian.txt” contains the skull measurements**
+**from a group of Etruscans and modern Italians.**
+**There are two relevant variables in the dataset: x is the skull**
+**measurement and group is the type of skull.**
 
-a. Assuming that the data represent independent samples from normal distributions,
-use the t.test function to test the hypothesis that the mean
-Etruscan skull measurement $\mu_E$ is equal to the mean Italian skull measurement $\mu_I$ .
-b. Use the t.test function to construct a 95% interval estimate 
-for the difference in means $\mu_E - \mu_I$.
-c. Use the two-sample Wilcoxon procedure implemented in the function
-wilcox.test to find an alternative 95% interval estimate for the difference
-$\mu_E - \mu_I$.
+```{r}
+etru_ital <- read.table("Rx-data/Etruscan-Italian.txt", header = TRUE)
+etru_ital$group <- factor(etru_ital$group)
+names(etru_ital) <- c("skull", "group")
+head(etru_ital)
+```
 
+```{r}
+par(mfrow = c(1, 3))
+plot(etru_ital$group, etru_ital$skull, xlab = "group", ylab = "skull", main = "skull")
+hist(etru_ital$skull[which(etru_ital$group == "Etruscan")],
+  xlab = "Etruscan", xlim = c(110, 165), breaks = 30, main = "Etruscan")
+hist(etru_ital$skull[which(etru_ital$group == "Italian")],
+  xlab = "Italian", xlim = c(110, 165), breaks = 30, main = "Italian")
+
+par(mfrow = c(1, 2))
+qqnorm(etru_ital$skull[which(etru_ital$group == "Etruscan")],
+  main="normal Q-Q plot (Etruscan)")
+qqline(etru_ital$skull[which(etru_ital$group == "Etruscan")])
+qqnorm(etru_ital$skull[which(etru_ital$group == "Italian")],
+  main = "normal Q-Q plot (Italian)")
+qqline(etru_ital$skull[which(etru_ital$group == "Italian")])
+
+c(mean(etru_ital$skull[which(etru_ital$group == "Etruscan")]),
+  mean(etru_ital$skull[which(etru_ital$group == "Italian")]))
+
+c(var(etru_ital$skull[which(etru_ital$group == "Etruscan")]),
+  var(etru_ital$skull[which(etru_ital$group == "Italian")]))
+```
+
+The boxplot shows that two center of both groups are different, but spread is similar.
+These facts are shown by group means and variances.
+When we look at the histograms and the Q-Q plots, 
+we can think that these two groups are normaly distributed.
+
+
+**a. Assuming that the data represent independent samples from normal distributions,**
+**use the t.test function to test the hypothesis that the mean**
+**Etruscan skull measurement $\mu_E$ is equal to the mean Italian skull measurement $\mu_I$ .**
+
+First, let's test whether variances are equal or not.
+H0 : two groups' variances are equal
+H1 : two groups' variances are different
+
+```{r}
+var.test(skull ~ group, data = etru_ital)
+```
+
+The p-value (0.7503) is quite high. So, we cannot reject the H0 under ordinary significance levels like 0.01 or 0.05.
+Thus, let's conduct the t-test under the equal-variance assumption.
+
+H0 : $\mu_E = \mu_I$
+H1 : $\mu_E \neq \mu_I$
+
+```{r}
+etru_ital_ttest <- t.test(skull ~ group, data = etru_ital, var.equal = TRUE)
+etru_ital_ttest
+```
+
+The T statistic value is 11.925, which follows student t distribution with df 152 under H0.
+The p-value is very small (so close to 0). So we can reject H0.
+Thus, we can conclude that their means are different.
+
+
+**b. Use the t.test function to construct a 95% interval estimate**
+**for the difference in means $\mu_E - \mu_I$.**
+**c. Use the two-sample Wilcoxon procedure implemented in the function**
+**wilcox.test to find an alternative 95% interval estimate for the difference**
+**$\mu_E - \mu_I$.**
+
+From above R t-test result object, we can get 95% interval for the difference.
+
+```{r}
+etru_ital_ttest$conf.int
+```
+
+The interval is $(9.45365, 13.20825)$.
 
 
 ### \noindent Problem7.
-Albert and Rizzo, Chapter 6, problem 7
+**Albert and Rizzo, Chapter 6, problem 7**
 
-6.7 (President's heights). In Example 1.2, the height of the election winner
-and loser were collected for the U.S. Presidential elections of 1948 through 2008.
-Suppose you are interested in testing the hypothesis that the mean
-height of the election winner is equal to the mean height of the election loser.
-Assuming that this data represent paired data from a hypothetical population
-of elections, use the t.test function to test this hypothesis. Interpret the
-results of this test.
+**6.7 (President's heights). In Example 1.2, the height of the election winner**
+**and loser were collected for the U.S. Presidential elections of 1948 through 2008.**
+**Suppose you are interested in testing the hypothesis that the mean**
+**height of the election winner is equal to the mean height of the election loser.**
+**Assuming that this data represent paired data from a hypothetical population**
+**of elections, use the t.test function to test this hypothesis. Interpret the**
+**results of this test.**
+
+First, let's enter data.
+
+```{r}
+year <- seq(from=2008, to=1948, by=-4)
+height_winner <- c(185, 182, 182, 188, 188, 188, 185, 185, 177,
+  182, 182, 193, 183, 179, 179, 175)
+height_opponent <- c(175, 193, 185, 187, 188, 173, 180, 177, 183,
+  185, 180, 180, 182, 178, 178, 173)
+height_difference <- height_winner - height_opponent
+president_height <- data.frame(year,
+  height_winner, height_opponent, height_difference)
+```
+
+Next, let's see the differences by our eyes.
+
+```{r}
+# EDA
+par(mfrow = c(1, 3))
+boxplot(height_difference, main = "height difference")
+hist(height_difference, breaks = 5, main = "", xlab = "", ylab = "winner - opponent")
+qqnorm(height_difference)
+qqline(height_difference)
+summary(height_difference)
+```
+
+Samples are nearly symmetric and have a mode at the center (near 0), but they doesn't seem normally distributed.
+The box in the boxplot contains 0. Not only that, median and median value are close to 0.
+
+Next is the paired t-test. Suppose that the difference follows the normal distribution 
+(even if I'm a little skeptical about this assumption).
+
+H0: height difference between winner and opponent is 0.
+H1: height difference between winner and opponent is not 0.
+
+```{r}
+president_height_ttest <- t.test(height_difference, alternative = "two.sided")
+president_height_ttest
+
+president_height_ttest2 <- t.test(height_winner, height_opponent, data = president_height,
+  alternative = "two.sided", paired = TRUE)
+president_height_ttest2
+```
+
+Basically, above two t-tests are equivalent.
+The T statistic is 1.3279, and it follows t distribution with df=15 under H0.
+The p-value is 0.2041, so we cannot reject H0 with significance levels lower than 0.2041, like 0.05 or 0.01.
+Thus, we cannot conclude that the height difference between winner and opponent is not 0.
+
 
 
 ### \noindent Problem8.
-Albert and Rizzo, Chapter 7, problem 5
+**Albert and Rizzo, Chapter 7, problem 5**
 
-7.5 (Hubble's Law). In 1929 Edwin Hubble investigated the relationship
-between distance and velocity of celestial objects. 
-Knowledge of this relationship might give clues as to how the universe was
-formed and what may happen in the future. 
-Hubble's Law is 
+**7.5 (Hubble's Law). In 1929 Edwin Hubble investigated the relationship**
+**between distance and velocity of celestial objects.**
+**Knowledge of this relationship might give clues as to how the universe was**
+**formed and what may happen in the future.**
+**Hubble's Law is**
 \[Recession Velocity = H_0 \times Distance \]
-where $H_0$ is Hubble's constant. This model is a straight line through the origin
-with slope $H_0$. Data that Hubble used to estimate the constant $H_0$ are given
-on the DASL web at http://lib.stat.cmu.edu/DASL/Datafiles/Hubble.html.
-Use the data to estimate Hubble's constant by simple linear regression.
+**where $H_0$ is Hubble's constant. This model is a straight line through the origin**
+**with slope $H_0$. Data that Hubble used to estimate the constant $H_0$ are given**
+**on the DASL web at http://lib.stat.cmu.edu/DASL/Datafiles/Hubble.html.**
+**Use the data to estimate Hubble's constant by simple linear regression.**
+
+The link does not work. So, I will import the dataset from 'gamair' package.
+
+```{r}
+library(gamair)
+data(hubble)
+# ?hubble
+# Galaxy : A (factor) label identifying the galaxy.
+# y : The galaxy's relative velocity in kilometres per second.
+# x : The galaxy's distance in Mega parsecs. 1 parsec is 3.09e13 km.
+
+names(hubble)[2:3] <- c("velocity", "distance")
+head(hubble)
+plot(velocity ~ distance, data = hubble, main = "hubble data")
+```
+
+To estimate the $H_0$ which is a slope of fitted line, I'll use linear regression models.
+Note that Hubble's law does not have an intercept term, so our model become
+```{r}
+hubble_lm_fit <- lm(velocity ~ 0 + distance, data = hubble)
+summary(hubble_lm_fit)
+```
+
+We can reject the H0 of the t-test (H0: $H_0=0$, H1: $H_0 \neq 0$) under confidencee level 0.05 or 0.01,
+so the coefficient is not 0.
+
+The estimated coefficient (Hubble constant) is 76.58. In other words,
+\[\hat{velocity} = 76.58 * distance\]
+
+```{r}
+par(mfrow = c(1, 1))
+plot(velocity ~ distance, data = hubble, main = "hubble data")
+abline(hubble_lm_fit)
+text(hubble$distance[15], hubble$velocity[15], label = "15th", pos = 1)
+text(hubble$distance[3], hubble$velocity[3], label = "3rd", pos = 1)
+```
+
+The line seems good, although there are some data points that are far from line. (For example, 3rd and 15th points.)
+
+Here are residual plot and q-q plot.
+
+```{r}
+par(mfrow = c(2, 2))
+plot(hubble_lm_fit)
+```
+
+Except for the two points I mentioned above, residuals have no pattern, and all data points are on the normal q-q line.
+If we remove the two points and fit the same model, we might get better results.
+So, without more explanation, I'll give the result without the two points.
+
+```{r}
+hubble_without2 <- hubble[-c(3, 15),]
+hubble_without2_lm_fit <- lm(velocity ~ 0 + distance, data = hubble_without2)
+summary(hubble_without2_lm_fit)
+
+par(mfrow = c(1, 1))
+plot(velocity ~ distance, data = hubble_without2, main = "hubble data (without 2 outliers)")
+abline(hubble_without2_lm_fit)
+
+par(mfrow = c(2, 2))
+plot(hubble_without2_lm_fit)
+```
+
+New estimated constant is 77.67.
+We can see another problem in the residual plot and normal Q-Q plot, but let me stop here.
 
 
 ### \noindent Problem9.
@@ -251,17 +563,142 @@ of determination $R^2$ for the two models (with and without intercept term in
 the model). Hint: Save the fitted model as L and use summary(L) to display
 $R^2$. Interpret the value of $R^2$ as a measure of the fit.
 
+```{r}
+data(cars)
+head(cars)
+plot(cars)
+```
+
+two models are
+
+with intercept:
+\[dist = \beta_0 + \beta_1 speed + \epsilon\]
+
+without intercept:
+\[dist = \beta_1 speed + \epsilon\]
+
+with standard assumptions of simple linear regression models.
+
+```{r}
+car_lmfit_with_intercept <- lm(dist ~ speed, data = cars)
+car_lmfit_without_intercept <- lm(dist ~ 0 + speed, data = cars)
+summary(car_lmfit_with_intercept)
+summary(car_lmfit_without_intercept)
+```
+
+Note that in F-test for each model and all t-test for each estimated coefficient,
+we can reject all H0s. (But, I cannot be sure how to interpret the F-test's result
+of non-intercept case.)
+
+For 'with-intercept' case, $R^2$ is 0.6511, and for 'without intercept case', $R^2$ is 0.8963.
+However, I think these results are wierd. 
+Perhaps R may calculate the $R^2$ value wrongly for the non-intercept linear model.
+
+
+```{r}
+par(mfrow = c(1,3))
+plot(dist ~ speed, data = cars, xlim = c(0, 25))
+abline(car_lmfit_with_intercept, col = "blue")
+abline(car_lmfit_without_intercept, col = "red")
+legend("topleft", col = c("blue", "red"), lty = c(1, 1),
+  legend = c("with intercept", "without intercept"), cex = 1.5)
+
+car_lmfit_with_intercept_sse <- sum((car_lmfit_with_intercept$residuals)^2)
+car_lmfit_without_intercept_sse <- sum((car_lmfit_without_intercept$residuals)^2)
+
+plot(cars$speed, car_lmfit_with_intercept$residuals, main = "residuals: with intercept")
+abline(h = 0)
+text(5, 43, labels = paste("SSE:", round(car_lmfit_with_intercept_sse)), cex = 1.5, pos=4)
+
+plot(cars$speed, car_lmfit_without_intercept$residuals, main = "residuals: without intercept")
+abline(h = 0)
+text(5, 50, labels = paste("SSE:", round(car_lmfit_without_intercept_sse)), cex = 1.5, pos=4)
+```
+
+The reason is, fitting result of the model with an intercept seems much better than the result of the model without intercept
+The blue line clearly better than the red line in the scatterplot. 
+Not only that, points in the residual plot of the model with an intercept has smaller values than without-intercept case.
+If I calculate the SSE value by myself, SSE of with-intercpet model is less than SSe of without-intercept model.
+
+So, I think we need to be careful when interpreting the $R^2$ value of a linear model without an intercept term.
+
+
+
 ### \noindent Problem10.
-Albert and Rizzo, Chapter 7, problem 11
+**Albert and Rizzo, Chapter 7, problem 11**
 
-7.11 (twins data). Import the data file "twins.txt" using read.table. (The
-commands to read this data file are shown in the twins example in Section
-3.3, page 85.) The variable DLHRWAGE is the difference (twin 1 minus twin 2)
-in the logarithm of hourly wage, given in dollars. The variable HRWAGEL is
-the hourly wage of twin 1. Fit and analyze a simple linear regression model
-to predict the difference DLHRWAGE given the logarithm of the hourly wage of
-twin 1.
+**7.11 (twins data). Import the data file "twins.txt" using read.table. (The**
+**commands to read this data file are shown in the twins example in Section**
+**3.3, page 85.) The variable DLHRWAGE is the difference (twin 1 minus twin 2)**
+**in the logarithm of hourly wage, given in dollars. The variable HRWAGEL is**
+**the hourly wage of twin 1. Fit and analyze a simple linear regression model**
+**to predict the difference DLHRWAGE given the logarithm of the hourly wage of**
+**twin 1.**
 
+First, let me load the dataset. For convenience, I will exclude all rows
+with at least one NA value for any variable.
+(I admit that this is an extreme(?) approach, 
+but I don't want to fill in incomplete data using some statistical methods here.)
+
+```{r}
+twins_raw <- read.table("Rx-data/twins.txt",
+  header = TRUE, sep = ",", na.strings = ".")
+twins <- subset(twins_raw, complete.cases(twins_raw)) #exclude NA
+names(twins)
+head(twins)
+
+# plot(DLHRWAGE ~ log(HRWAGEL), data = twins2, xlim = c(0,5))
+```
+
+Let's do EDA.
+
+```{r}
+par(mfrow = c(1, 2))
+plot(DLHRWAGE ~ HRWAGEL, data = twins, main = "before log transform")
+plot(DLHRWAGE ~ log(HRWAGEL), data = twins, 
+  xlim = c(0, 5), main = "after log transform")
+```
+
+Even if we take the log transform, 
+the relationship between 'DLHRWAGE' and 'log(HRWAGEL)' does not seem linear.
+Nevertheless, I will fit a linear model, following the direction of the problem.
+
+Here is our model.
+
+\[DLHRWAGE = \beta_0 + \beta_1 HRWAGEL  + \epsilon\]
+
+with standard assumptions of simple linear regression models.
+
+```{r}
+twins_lm_fit <- lm(DLHRWAGE ~ log(HRWAGEL), data = twins)
+summary(twins_lm_fit)
+
+par(mfrow = c(1, 2))
+plot(DLHRWAGE ~ log(HRWAGEL), data = twins,
+  xlim = c(0, 5), main = "linear model fit")
+abline(twins_lm_fit)
+
+plot(log(twins$HRWAGEL), twins_lm_fit$residuals,
+  main = "residual plot", xlab = "log(HRWAGEL)")
+abline(h = 0)
+```
+
+By F test's p-value, we can reject the H0 
+(H0: $\beta_1 = 0$ vs H1: $\beta_1 \neq 0$). 
+And, at the t-test, we can also reject H0.
+(Actually, F test and t-test for $\beta_1$ are equivalent.)
+And $R^2$ is 0.2509. I think this is pretty low.
+
+Personally, I cannot satisfy this kind of result. The fitting is poor.
+But if you don't matter whatever, you can use this model to predict the 'DLHRWAGE' value
+given 'log(HRWAGEL)' value. If you want to use R, then just use 'predict' function.
+For example,
+```{r}
+new_x <- data.frame(log(HRWAGEL) = c(10, 20, 30)
+predict(twins_lm_fit, new_x, interval = "confidence")
+predict(twins_lm_fit, new_x, interval = "prediction")
+
+```
 
 ### \noindent Problem11.
 James et al., Chapter 2, problem 10  
