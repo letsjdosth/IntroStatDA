@@ -646,8 +646,6 @@ twins_raw <- read.table("Rx-data/twins.txt",
 twins <- subset(twins_raw, complete.cases(twins_raw)) #exclude NA
 names(twins)
 head(twins)
-
-# plot(DLHRWAGE ~ log(HRWAGEL), data = twins2, xlim = c(0,5))
 ```
 
 Let's do EDA.
@@ -694,11 +692,26 @@ But if you don't matter whatever, you can use this model to predict the 'DLHRWAG
 given 'log(HRWAGEL)' value. If you want to use R, then just use 'predict' function.
 For example,
 ```{r}
-new_x <- data.frame(log(HRWAGEL) = c(10, 20, 30)
-predict(twins_lm_fit, new_x, interval = "confidence")
-predict(twins_lm_fit, new_x, interval = "prediction")
+new_log_HRWAGEL <- seq(0, 5, by=0.5)
+new_HRWAGEL_df <- data.frame(HRWAGEL = exp(new_log_HRWAGEL))
+# 1.14801 + log(new_x) * -0.46055
+conf_int <- predict(twins_lm_fit, new_HRWAGEL_df, interval = "confidence")
+pred_int <- predict(twins_lm_fit, new_HRWAGEL_df, interval = "prediction")
 
+par(mfrow = c(1, 2))
+plot(DLHRWAGE ~ log(HRWAGEL), data = twins,
+  xlim = c(0, 5), main = "confidence interval")
+abline(twins_lm_fit)
+lines(new_log_HRWAGEL, conf_int[, 2], col = "red")
+lines(new_log_HRWAGEL, conf_int[, 3], col = "red")
+
+plot(DLHRWAGE ~ log(HRWAGEL), data = twins,
+  xlim = c(0, 5), main = "prediction interval")
+abline(twins_lm_fit)
+lines(new_log_HRWAGEL, pred_int[, 2], col = "blue")
+lines(new_log_HRWAGEL, pred_int[, 3], col = "blue")
 ```
+
 
 ### \noindent Problem11.
 James et al., Chapter 2, problem 10  
