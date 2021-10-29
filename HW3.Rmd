@@ -14,7 +14,7 @@ output:
 
 **a. Construct a residual plot for the linear fit by typing**
 
-**plot(cars$speed, fit.linear$residual)**
+**plot(cars\$speed, fit.linear\$residual)**
 
 
 **b. Add a blue, thick (lwd=3) horizontal line to the residual plot using the**
@@ -54,12 +54,13 @@ text(cars$speed[large_neg_res_idx],
 **e. Use the identify function to find the row numbers of two observations**
 **that have residuals close to zero.**
 
-Because we cannot use the 'identify' function during R markdown compile process,
+Because we cannot use the 'identify' function during the R markdown compile process,
 I will use which function instead.
 
 ```{r}
 abs_resid <- abs(cars_fit_linear$residuals)
 which(abs_resid <= sort(abs_resid)[2])
+cars_fit_linear$residuals[which(abs_resid <= sort(abs_resid)[2])]
 ```
 
 Points at the 17th and the 18th rows are close to zero.
@@ -91,7 +92,7 @@ plot(mtcars$drat, mtcars$mpg)
 cor(mtcars)["mpg", c("disp", "wt", "hp", "drat")]
 ```
 
-Both by graphs and by correlation values show that
+Not only graphs but also correlation values show that
 'wt' (weight) has the strongest relationship with 'mpg' (mileage) among the four variables.
 
 
@@ -121,7 +122,7 @@ Both by graphs and by correlation values show that
 
 ```{r}
 #a
-curve(dbeta(x, 2, 6), from = 0, to = 1)
+curve(dbeta(x, 2, 6), from = 0, to = 1, xlab = "y", ylab = "density")
 curve(dbeta(x, 4, 4), add = TRUE)
 curve(dbeta(x, 6, 2), add = TRUE)
 
@@ -142,7 +143,7 @@ text(0.99, 2.5, pos = 2, label = "a=6, b=2")
 
 ```{r}
 #d
-curve(dbeta(x, 2, 6), from = 0, to = 1)
+curve(dbeta(x, 2, 6), from = 0, to = 1, xlab = "y", ylab = "density")
 curve(dbeta(x, 4, 4), add = TRUE, col = "red")
 curve(dbeta(x, 6, 2), add = TRUE, col = "blue")
 title(expression(f(y) == frac(1, B(a,b))*y^{a-1}*(1-y)^{b-1}))
@@ -154,6 +155,7 @@ legend("top", lty = c(1,1,1), col = c("black", "red", "blue"),
 
 
 ### \noindent Problem4.
+
 **Albert and Rizzo, Chapter 6, problem 3 (a and b)**
 
 **6.3 (Ages of marathoners, continued). From the information in the 2005**
@@ -178,14 +180,14 @@ First, let's do EDA.
 par(mfrow = c(1, 3))
 plot(marathoners$Gender, marathoners$Age, xlab = "Gender", ylab = "Age")
 hist(marathoners$Age[which(marathoners$Gender == "female")],
-  xlab = "female", xlim = c(20, 75), breaks = 50)
+  xlab = "female", xlim = c(20, 75), breaks = 50, main = "")
 hist(marathoners$Age[which(marathoners$Gender == "male")],
-  xlab = "male", xlim = c(20, 75), breaks = 50)
+  xlab = "male", xlim = c(20, 75), breaks = 50, main = "")
 
 par(mfrow = c(1, 2))
 qqnorm(marathoners$Age[which(marathoners$Gender == "female")],
   main="normal Q-Q plot (female)")
-qqnorm(marathoners$Age[which(marathoners$Gender == "male")], 
+qqnorm(marathoners$Age[which(marathoners$Gender == "male")],
   main="normal Q-Q plot (male)")
 
 
@@ -203,32 +205,35 @@ to check whether they are statistically different or not.
 var.test(Age ~ Gender, data = marathoners)
 ```
 
-The p-value is 0.05602. If we use significance level as 0.05, we cannot reject the H0 technically.
-However, the p-value is so close to 0.05. So, I will do t-tests of both two versions (equal var / non-eqal var).
+The p-value is 0.05602. If we use a significance level of 0.05, we cannot reject the H0 technically.
+However, the p-value is so close to 0.05. So, I will do t-tests of both two versions (equal var / non-equal var).
 
 First, assume that two gender groups have non-equal variances of their ages.
 
 H0 : mean of women = mean of men
-H1 : mean of women < mean of men , or mean of women - mean of men < 0
+H1 : mean of women < mean of men, or mean of women - mean of men < 0
 
 ```{r}
 marathoners_ttest<- t.test(Age ~ Gender, data = marathoners, alternative = "less")
 marathoners_ttest
 ```
 
-The p-value is 0.009495. If we use a significance level higher than 0.009495 (like 0.05 or 0.01,)
+The p-value is 0.007443. If we use a significance level higher than 0.007443 (like 0.05 or 0.01,)
 we can reject H0. Thus, Two gender groups don't have the same mean value of age.
 
 
+
 Next, suppose that two gender groups have the same variance.
-The hypothesis is same as above case.
+The hypothesis is the same as the above case.
+
 ```{r}
-marathoners_ttest_equalvar<- t.test(Age ~ Gender, data = marathoners, alternative = "less", var.equal = TRUE)
+marathoners_ttest_equalvar<- t.test(Age ~ Gender, data = marathoners, 
+  alternative = "less", var.equal = TRUE)
 marathoners_ttest_equalvar
 ```
 
-The t-value, the degrees of freedom, and p-value are different from above case,
-but anyway the p-value is 0.007443. This is smaller than common significance levels like 0.05 or 0.01.
+The t-value, the degrees of freedom, and p-value are different from the above case,
+but anyway, the p-value is 0.009495. This is smaller than common significance levels like 0.05 or 0.01.
 We can reject H0 under 0.05 or 0.01 significance levels.
 Thus, Two gender groups don't have the same mean value of age.
 
@@ -242,19 +247,19 @@ t.test(Age ~ Gender, data = marathoners, alternative = "less",
 t.test(Age ~ Gender, data = marathoners, alternative = "less",
   var.equal = TRUE, conf.level = 0.9)$conf.int
 ```
-The 90% confidence interval is $(\infty, -1.420086)$ under the different variance assumption,
+The 90% confidence interval is $(\infty, -1.420086)$ under the different variances assumption,
 and $(\infty, 1.359311)$ under the equal-variance assumption.
 
 
 
 ### \noindent Problem5.
+
 **Albert and Rizzo, Chapter 6, problem 4**
 
 **6.4 (Measuring the length of a string). An experiment was performed**
 **in an introductory statistics class to illustrate the concept of measurement**
 **bias. The instructor held up a string in front of the class and each student**
 **guessed at the string's length. The following are the measurements from the**
-
 **24 students (in inches).**
 
 22 18 27 23 24 15 26 22 24 25 24 18
@@ -278,7 +283,7 @@ qqline(stringlen)
 summary(stringlen)
 ```
 
-The mean value is 22.25.
+Note that the mean value is 22.25.
 
 **b. The true length of the string was 26 inches. Assuming that this sample of**
 **measurements represents a random sample from a population of student**
@@ -286,7 +291,9 @@ The mean value is 22.25.
 **mean measurement $\mu$ is different from 26 inches.**
 
 Hypotheses are
+
 H0 : $\mu = 26$
+
 H1 : $\mu \neq 26$
 
 ```{r}
@@ -294,9 +301,9 @@ stringlen_ttest <- t.test(stringlen, alternative = "two.sided", mu = 26)
 stringlen_ttest
 ```
 
-The T statistic is -4.6148, which follows student's t distribution with the degree of freedom 23 under H0.
+The T statistic is -4.6148, which follows the student-t distribution with the degree of freedom 23 under H0.
 The p-value is 0.0001216, so we can reject H0 with a significance level higher than 0.0001216, like 0.05 or 0.01.
-Thus, under these level, $\mu$ is not 26.
+Thus, under these levels, $\mu$ is not 26.
 
 
 **c. Use the t.test function to find a 90% confidence interval for the population mean $\mu$.**
@@ -310,7 +317,7 @@ The 90% confidence interval of $\mu$ is $(20.8573, 23.6427)$.
 **normally distributed. Construct a normal probability plot of the measurements**
 **and decide if the assumption of normality is reasonable.**
 
-In the EDA at the problem (a), I already draw the normal probability plot (or normal Q-Q plot),
+In the EDA at the problem (a), I already have drawn the normal probability plot (or normal Q-Q plot),
 but I repeat it here.
 
 ```{r}
@@ -319,13 +326,14 @@ qqnorm(stringlen)
 qqline(stringlen)
 ```
 
-Unfortunately, Q-Q plot's points are not on a line.
+Unfortunately, the Q-Q plot's points are not on a line.
 This can be confirmed again in the histogram result of (a).
-So, the normality assumption does not seem resonable in this case.
+So, the normality assumption does not seem reasonable in this case.
 
 
 
 ### \noindent Problem6.
+
 **Albert and Rizzo, Chapter 6, problem 6 (a and b)**
 
 **6.6 (Comparing Etruscan and modern Italian skulls). Researchers**
@@ -365,7 +373,7 @@ c(var(etru_ital$skull[which(etru_ital$group == "Etruscan")]),
   var(etru_ital$skull[which(etru_ital$group == "Italian")]))
 ```
 
-The boxplot shows that two center of both groups are different, but spread is similar.
+The boxplot shows that the two centers of both groups are different, but spread is similar.
 These facts are shown by group means and variances.
 When we look at the histograms and the Q-Q plots, 
 we can think that these two groups are normaly distributed.
@@ -376,7 +384,9 @@ we can think that these two groups are normaly distributed.
 **Etruscan skull measurement $\mu_E$ is equal to the mean Italian skull measurement $\mu_I$ .**
 
 First, let's test whether variances are equal or not.
+
 H0 : two groups' variances are equal
+
 H1 : two groups' variances are different
 
 ```{r}
@@ -387,6 +397,7 @@ The p-value (0.7503) is quite high. So, we cannot reject the H0 under ordinary s
 Thus, let's conduct the t-test under the equal-variance assumption.
 
 H0 : $\mu_E = \mu_I$
+
 H1 : $\mu_E \neq \mu_I$
 
 ```{r}
@@ -394,7 +405,7 @@ etru_ital_ttest <- t.test(skull ~ group, data = etru_ital, var.equal = TRUE)
 etru_ital_ttest
 ```
 
-The T statistic value is 11.925, which follows student t distribution with df 152 under H0.
+The T statistic value is 11.925, which follows the student-t distribution with df 152 under H0.
 The p-value is very small (so close to 0). So we can reject H0.
 Thus, we can conclude that their means are different.
 
@@ -405,7 +416,7 @@ Thus, we can conclude that their means are different.
 **wilcox.test to find an alternative 95% interval estimate for the difference**
 **$\mu_E - \mu_I$.**
 
-From above R t-test result object, we can get 95% interval for the difference.
+From the above R t-test result object, we can get the 95% interval for the difference.
 
 ```{r}
 etru_ital_ttest$conf.int
@@ -415,6 +426,7 @@ The interval is $(9.45365, 13.20825)$.
 
 
 ### \noindent Problem7.
+
 **Albert and Rizzo, Chapter 6, problem 7**
 
 **6.7 (President's heights). In Example 1.2, the height of the election winner**
@@ -444,38 +456,41 @@ Next, let's see the differences by our eyes.
 # EDA
 par(mfrow = c(1, 3))
 boxplot(height_difference, main = "height difference")
-hist(height_difference, breaks = 5, main = "", xlab = "", ylab = "winner - opponent")
+hist(height_difference, breaks = 5, main = "height difference",
+  xlab = "", ylab = "winner - opponent")
 qqnorm(height_difference)
 qqline(height_difference)
 summary(height_difference)
 ```
 
-Samples are nearly symmetric and have a mode at the center (near 0), but they doesn't seem normally distributed.
-The box in the boxplot contains 0. Not only that, median and median value are close to 0.
+Samples are nearly symmetric and have a mode at the center (near 0), but they don't seem normally distributed.
+The box in the boxplot contains 0. Not only that, median and mean values are close to 0.
 
 Next is the paired t-test. Suppose that the difference follows the normal distribution 
 (even if I'm a little skeptical about this assumption).
 
 H0: height difference between winner and opponent is 0.
+
 H1: height difference between winner and opponent is not 0.
 
 ```{r}
 president_height_ttest <- t.test(height_difference, alternative = "two.sided")
 president_height_ttest
 
-president_height_ttest2 <- t.test(height_winner, height_opponent, data = president_height,
-  alternative = "two.sided", paired = TRUE)
+president_height_ttest2 <- t.test(height_winner, height_opponent, 
+  data = president_height, alternative = "two.sided", paired = TRUE)
 president_height_ttest2
 ```
 
-Basically, above two t-tests are equivalent.
-The T statistic is 1.3279, and it follows t distribution with df=15 under H0.
+Basically, the above two t-tests are equivalent.
+The T statistic is 1.3279, and it follows the student-t distribution with df=15 under H0.
 The p-value is 0.2041, so we cannot reject H0 with significance levels lower than 0.2041, like 0.05 or 0.01.
 Thus, we cannot conclude that the height difference between winner and opponent is not 0.
 
 
 
 ### \noindent Problem8.
+
 **Albert and Rizzo, Chapter 7, problem 5**
 
 **7.5 (Hubble's Law). In 1929 Edwin Hubble investigated the relationship**
@@ -489,7 +504,7 @@ Thus, we cannot conclude that the height difference between winner and opponent 
 **on the DASL web at http://lib.stat.cmu.edu/DASL/Datafiles/Hubble.html.**
 **Use the data to estimate Hubble's constant by simple linear regression.**
 
-The link does not work. So, I will import the dataset from 'gamair' package.
+The link does not work. So, I will import the dataset from the 'gamair' package.
 
 ```{r}
 library(gamair)
@@ -504,8 +519,9 @@ head(hubble)
 plot(velocity ~ distance, data = hubble, main = "hubble data")
 ```
 
-To estimate the $H_0$ which is a slope of fitted line, I'll use linear regression models.
-Note that Hubble's law does not have an intercept term, so our model become
+To estimate the $H_0$ which is a slope of the fitted line, I'll use linear regression models.
+Note that Hubble's law does not have an intercept term, so our model becomes
+
 ```{r}
 hubble_lm_fit <- lm(velocity ~ 0 + distance, data = hubble)
 summary(hubble_lm_fit)
@@ -525,9 +541,9 @@ text(hubble$distance[15], hubble$velocity[15], label = "15th", pos = 1)
 text(hubble$distance[3], hubble$velocity[3], label = "3rd", pos = 1)
 ```
 
-The line seems good, although there are some data points that are far from line. (For example, 3rd and 15th points.)
+The line seems good, although there are some data points that are far from the line. (For example, 3rd and 15th points.)
 
-Here are residual plot and q-q plot.
+Here are the residual plot and the q-q plot.
 
 ```{r}
 par(mfrow = c(2, 2))
@@ -536,7 +552,8 @@ plot(hubble_lm_fit)
 
 Except for the two points I mentioned above, residuals have no pattern, and all data points are on the normal q-q line.
 If we remove the two points and fit the same model, we might get better results.
-So, without more explanation, I'll give the result without the two points.
+
+Below is the result excluding those two points. I'll just give you the results without explanation.
 
 ```{r}
 hubble_without2 <- hubble[-c(3, 15),]
@@ -544,24 +561,25 @@ hubble_without2_lm_fit <- lm(velocity ~ 0 + distance, data = hubble_without2)
 summary(hubble_without2_lm_fit)
 
 par(mfrow = c(1, 1))
-plot(velocity ~ distance, data = hubble_without2, main = "hubble data (without 2 outliers)")
+plot(velocity ~ distance, data = hubble_without2, 
+  main = "hubble data (without 2 outliers)")
 abline(hubble_without2_lm_fit)
 
 par(mfrow = c(2, 2))
 plot(hubble_without2_lm_fit)
 ```
 
-New estimated constant is 77.67.
+The new estimated constant is 77.67.
 We can see another problem in the residual plot and normal Q-Q plot, but let me stop here.
 
 
 ### \noindent Problem9.
-Albert and Rizzo, Chapter 7, problem 7
+**Albert and Rizzo, Chapter 7, problem 7**
 
-7.7 (cars data). For the cars data in Example 7.1, compare the coefficient
-of determination $R^2$ for the two models (with and without intercept term in
-the model). Hint: Save the fitted model as L and use summary(L) to display
-$R^2$. Interpret the value of $R^2$ as a measure of the fit.
+**7.7 (cars data). For the cars data in Example 7.1, compare the coefficient**
+**of determination $R^2$ for the two models (with and without intercept term in**
+**the model). Hint: Save the fitted model as L and use summary(L) to display**
+**$R^2$. Interpret the value of $R^2$ as a measure of the fit.**
 
 ```{r}
 data(cars)
@@ -569,7 +587,7 @@ head(cars)
 plot(cars)
 ```
 
-two models are
+Two models are
 
 with intercept:
 \[dist = \beta_0 + \beta_1 speed + \epsilon\]
@@ -588,20 +606,20 @@ summary(car_lmfit_without_intercept)
 
 Note that in F-test for each model and all t-test for each estimated coefficient,
 we can reject all H0s. (But, I cannot be sure how to interpret the F-test's result
-of non-intercept case.)
+of the non-intercept case.)
 
 For 'with-intercept' case, $R^2$ is 0.6511, and for 'without intercept case', $R^2$ is 0.8963.
-However, I think these results are wierd. 
+However, I think these results are weird. 
 Perhaps R may calculate the $R^2$ value wrongly for the non-intercept linear model.
 
 
 ```{r}
-par(mfrow = c(1,3))
+par(mfrow = c(1, 3))
 plot(dist ~ speed, data = cars, xlim = c(0, 25))
 abline(car_lmfit_with_intercept, col = "blue")
 abline(car_lmfit_without_intercept, col = "red")
 legend("topleft", col = c("blue", "red"), lty = c(1, 1),
-  legend = c("with intercept", "without intercept"), cex = 1.5)
+  legend = c("with intercept", "without intercept"))
 
 car_lmfit_with_intercept_sse <- sum((car_lmfit_with_intercept$residuals)^2)
 car_lmfit_without_intercept_sse <- sum((car_lmfit_without_intercept$residuals)^2)
@@ -615,16 +633,17 @@ abline(h = 0)
 text(5, 50, labels = paste("SSE:", round(car_lmfit_without_intercept_sse)), cex = 1.5, pos=4)
 ```
 
-The reason is, fitting result of the model with an intercept seems much better than the result of the model without intercept
+The reason is, the fitting result of the model with an intercept seems much better than the result of the model without intercept
 The blue line clearly better than the red line in the scatterplot. 
-Not only that, points in the residual plot of the model with an intercept has smaller values than without-intercept case.
-If I calculate the SSE value by myself, SSE of with-intercpet model is less than SSe of without-intercept model.
+Not only that, points in the residual plot of the model with an intercept have smaller values than without-intercept case.
+If I calculate the SSE value by myself, the SSE of the with-intercept model is less than the SSE of the without-intercept model.
 
 So, I think we need to be careful when interpreting the $R^2$ value of a linear model without an intercept term.
 
 
 
 ### \noindent Problem10.
+
 **Albert and Rizzo, Chapter 7, problem 11**
 
 **7.11 (twins data). Import the data file "twins.txt" using read.table. (The**
@@ -638,7 +657,7 @@ So, I think we need to be careful when interpreting the $R^2$ value of a linear 
 First, let me load the dataset. For convenience, I will exclude all rows
 with at least one NA value for any variable.
 (I admit that this is an extreme(?) approach, 
-but I don't want to fill in incomplete data using some statistical methods here.)
+but I don't want to fill in incomplete data using other statistical methods here.)
 
 ```{r}
 twins_raw <- read.table("Rx-data/twins.txt",
@@ -713,8 +732,11 @@ lines(new_log_HRWAGEL, pred_int[, 3], col = "blue")
 ```
 
 
+
 ### \noindent Problem11.
+
 **James et al., Chapter 2, problem 10**
+
 **This exercise involves the Boston housing data set.**
 
 **(a) To begin, load in the Boston data set. The Boston data set is**
@@ -786,23 +808,25 @@ pairs(Boston[,c(-4)],  upper.panel = panel.cor, panel = panel.smooth,
       diag.panel = panel.hist, cex.labels = 2, font.labels = 1)
 ```
 
+Oh, this problem is the same as in the last homework, so I repeat the answer to that.
+
 First, 'zn', 'rad', 'tax' and 'black' have uniquely shaped histograms. 
 In the case of the 'zn', most of the points are near 0.
-In contrast, most of points of the 'black' have large values.
+In contrast, most of the points of the 'black' have large values.
 Finally, the 'rad' and 'tax' seem to have two clusters.
 
 Next, 'indus'and 'nox', 'indus' and 'age', 'indus' and 'dis', 'nox' and 'age', 'nox' and 'dis'
-'rm' and 'lstat', 'rm' and 'medv', 'lstat' and 'medv' have some increasing/decreasing relationship.
-However, all cases does not seem perfectly linear. Perhaps, we may get the linear relationship among them by some transformations.
+'rm' and 'lstat', 'rm' and 'medv', 'lstat' and 'medv' have some increasing/decreasing relationships.
+However, all cases do not seem perfectly linear. Perhaps, we may get the linear relationship among them by some transformations.
 
-Finally, some fitted resistant lines and correlation coefficients (expecially in the 'rad' and 'tax' case) do not give much useful information. 
+Finally, some fitted resistant lines and correlation coefficients (especially  in the 'rad' and 'tax' case) do not give much useful information. 
 As you can see in these examples, it always seems necessary to check visually through pictures for a EDA procedure.
 
 
 
 **(c) Are any of the predictors associated with per capita crime rate?**
 **If so, explain the relationship.**
-```{r}
+```{r, echo=FALSE, fig.height=2}
 names(Boston)
 par(mfrow = c(1, 3))
 plot(crim ~ zn, data = Boston)
@@ -824,11 +848,11 @@ plot(crim ~ lstat, data = Boston)
 plot(crim ~ medv, data = Boston)
 ```
 
-Although none of the predictors are very satisfactory to be associate with per capita crime rate,
+Although none of the predictors are very satisfactory to be associated with per capita crime rate,
 we can say that there is no high crime-rate town unless 'zn' is 0 and 'indus' is between 15 and 20.
 Likewise, 'rad', 'tax', 'ptratio' can be used similar way. (the high crame rate towns have 'rad' values greater than 20,
 'tax' value grater than 600, and 'ptratio' near 20.)
-'lstat' and  'medv' seems to have weak quadratic or exponential-like relationships. But I think they are too weak.
+'lstat' and  'medv' seem to have weak quadratic or exponential-like relationships. But I think they are too weak.
 
 
 **(d) Do any of the suburbs of Boston appear to have particularly**
@@ -846,9 +870,9 @@ boxplot(Boston["tax"], xlab = "tax rates")
 boxplot(Boston["ptratio"], xlab = "pupil-teacher ratio")
 ```
 
-In the case of crime rates, there a lots of suburbs that have extremely high crime rate comparing to the other towns.
-However, although the range of tax rates are large, they don't seem to particularly high, according to the boxplot.
-Likewise, the difference between maximum and minimum pupil-teacher rates is quite big (Yes, they are 'ratios'!),
+In the case of crime rates, there are lots of suburbs that have extremely high crime rates compared to the other towns.
+However, although the range of tax rates is large, they don't seem particularly high, according to the boxplot.
+Likewise, the difference between the maximum and the minimum pupil-teacher rates is quite big (Yes, they are 'ratios'!),
 but we cannot say that the maximum value is particularly high.
 
 
@@ -877,10 +901,10 @@ which.min(Boston$medv)
 Boston[which.min(Boston$medv),]
 ```
 
-The suburb of the 399th row has lowest median value of owner occupied homes.
+The suburb of the 399th row has the lowest median value of owner-occupied homes.
 
-```{r}
-par(mfrow = c(4,3))
+```{r, fig.height=2}
+par(mfrow = c(1, 3))
 for(i in 1:12){
   boxplot(Boston[i], xlab = names(Boston[i]), horizontal = TRUE)
   points(Boston[399, i], 1, col = "red", pch = 16, cex = 3)
@@ -888,9 +912,9 @@ for(i in 1:12){
 ```
 
 The red dot corresponds to the 399th suburb.
-From boxplot, we can find that the 399th suburbs also has extreme values 
+From the boxplots, we can find that the 399th suburb also has extreme values 
 for 'zn', 'age', 'dis', 'rad', 'black' and quite high value of 'crim', 'nox', 'tax'
-comparing to the overall range of each predictor.
+compared to the overall range of each predictor.
 
 
 **(h) In this data set, how many of the suburbs average more than**
@@ -906,33 +930,583 @@ sum(Boston$rm > 8)
 64 suburbs have more than seven rooms per dwelling on average.
 And, only 13 suburbs have more than eight rooms per dwelling on average.
 
-```{r}
-par(mfrow = c(4,3))
-for(i in 1:12){
+```{r, fig.height=2}
+par(mfrow = c(1, 3))
+for(i in 1:12) {
   boxplot(Boston[i], xlab = names(Boston[i]), horizontal = TRUE)
   eightroom_idx <- (Boston$rm > 8)
-  points(Boston[eightroom_idx, i], rnorm(sum(eightroom_idx), 1, 0.1), 
+  points(Boston[eightroom_idx, i], rnorm(sum(eightroom_idx), 1, 0.1),
     col = "blue", pch = 16, cex = 1.5)
 }
 ```
 
 Blue dots correspond to suburbs that have more than eight rooms per dwelling on average.
-Their per capia crime rates are low, and proportions of blacks are high.
+Their per capita crime rates are low, and the proportions of blacks are high.
 Moreover, most of them have low 'zn', 'indus', 'dis', 'rad', and 'tax' values and high 'age' values.
 
 
 
 ### \noindent Problem12.
-James et al., Chapter 3, problem 1
+
+**James et al., Chapter 3, problem 1**
+
+**Describe the null hypotheses to which the p-values given in Table 3.4**
+**correspond. Explain what conclusions you can draw based on these**
+**p-values. Your explanation should be phrased in terms of sales, TV,**
+**radio, and newspaper, rather than in terms of the coefficients of the**
+**linear model.**
+
+```{r}
+table3.4 <- data.frame(
+  variable = c("Intercept", "TV", "radio", "newspaper"),
+  coefficient = c(2.939, 0.046, 0.189, -0.001),
+  Std.Error = c(0.3119, 0.0014, 0.0086, 0.0059),
+  t_statistic = c(9.42, 32.81, 21.89, -0.18),
+  p_value = c("<0.0001", "<0.0001", "<0.0001", "0.8599")
+)
+library(knitr)
+kable(table3.4)
+```
+
+This is t-test for a multiple linear regression with model
+\[sales = \beta_0 + \beta_1 TV + \beta_2 radio + \beta_3 newspaper + \epsilon\]
+
+We can test four kinds of hypotheses.
+
+- For TV
+
+H0 : TV advertising has no effect on sales. ($\beta_1 = 0$)
+
+H1 : TV advertising affects sales. ($\beta_1 \neq 0$)
+
+The p-value is <0.001, so we can reject H0 with common significance levels like 0.05 or 0.01.
+Thus, TV advertising affects sales.
+
+
+- For radio
+
+H0 : Radio advertising has no effect on sales. ($\beta_2 = 0$)
+
+H1 : Radio advertising affects sales. ($\beta_2 \neq 0$)
+
+The p-value is <0.001, so we can reject H0 with common significance levels like 0.05 or 0.01.
+Thus, Radio advertising affects sales.
+
+
+- For radio
+
+H0 : Newspaper advertising has no effect on sales. ($\beta_3 = 0$)
+
+H1 : Newspaper advertising affects sales. ($\beta_3 \neq 0$)
+
+The p-value is 0.8599, so we cannot reject H0 with common significance levels like 0.05 or 0.01.
+Thus, we cannot conclude that newspaper advertising affects sales.
+
+
+And, finally,
+
+- For intercept
+
+H0 : There are no sales without any advertising. ($\beta_0 = 0$)
+
+H1 : There is a non-zero, basic level of sales. ($\beta_0 \neq 0$)
+
+The p-value is <0.001, so we can reject H0 with common significance levels like 0.05 or 0.01.
+Thus, although there is no advertisement on TV, radio, or newspaper, the level of sales is not 0.
+
+
 
 ### \noindent Problem13.
-James et al., Chapter 3, problem 3
+
+**James et al., Chapter 3, problem 3**
+
+**Suppose we have a data set with five predictors, X1 = GPA, X2 = IQ,**
+**X3 = Gender (1 for Female and 0 for Male), X4 = Interaction between**
+**GPA and IQ, and X5 = Interaction between GPA and Gender. The**
+**response is starting salary after graduation (in thousands of dollars).**
+**Suppose we use least squares to fit the model, and get**
+$\hat{\beta_0}=50, \hat{\beta_1}=20, \hat{\beta_2}=0.07, \hat{\beta_3}=35,
+\hat{\beta_4}=0.01, \hat{\beta_5}=-10$.
+
+Before solving the problem, let me write down the fitted model.
+
+\[StartingSalary = 50 + 20 * GPA + 0.07 * IQ + 35 * Gender + 0.01 * GPA * IQ  - 10 *  GPA * Gender\]
+
+**(a) Which answer is correct, and why?**
+
+1. For a fixed value of IQ and GPA, males earn more on average than females.
+
+False. 
+\[MaleSalary = 50 + 20 * GPA + 0.07 * IQ + 0.01 * GPA * IQ\]
+\[FemaleSalary = (50+35) + (20-10) * GPA + 0.07 * IQ + 0.01 * GPA * IQ\]
+
+If given GPA satisfies $35 > 10*GPA$, females earn more on average than males.
+
+
+2. For a fixed value of IQ and GPA, females earn more on average than males.
+
+False.
+If given GPA satisfies $35 < 10*GPA$, males earn more on average than females.
+
+3. For a fixed value of IQ and GPA, males earn more on average than females provided that the GPA is high enough.
+
+True. (same reason as 2)
+
+4. For a fixed value of IQ and GPA, females earn more on average than males provided that the GPA is high enough.
+
+False. (same reason as 1)
+
+
+**(b) Predict the salary of a female with IQ of 110 and a GPA of 4.0.**
+
+\[femaleSalary|_{IQ=110, GPA=4.0} = (50+35) + (20-10) * 4.0 + 0.07 * 110 + 0.01 * 4.0 * 110 = 137.1\]
+
+The predicted salary is 137.1 thousands of dollars.
+
+
+**(c) True or false: Since the coefficient for the GPA/IQ interaction**
+**term is very small, there is very little evidence of an interaction**
+**effect. Justify your answer**
+
+False in general, although it is likely. (more precisely, we could not know under given information.)
+To check the significance of the interaction term, we should consider the standard error of the model,
+and conduct the t-test for the term. But information about the standard error is missing in this problem.
+
 
 ### \noindent Problem14.
-James et al., Chapter 3, problem 8
+
+**James et al., Chapter 3, problem 8**
+
+**This question involves the use of simple linear regression on the Auto data set.**
+
+**(a) Use the lm() function to perform a simple linear regression with**
+**mpg as the response and horsepower as the predictor. Use the**
+**summary() function to print the results. Comment on the output.**
+**For example:**
+
+**1. Is there a relationship between the predictor and the response?**
+
+**2. How strong is the relationship between the predictor and the response?**
+
+**3. Is the relationship between the predictor and the response positive or negative?**
+
+**4. What is the predicted mpg associated with a horsepower of 98? What are the associated 95% confidence and prediction intervals?**
+
+```{r}
+auto <- read.csv("ItSL-data/Auto.csv", na.strings = "?")
+head(auto)
+```
+
+```{r}
+par(mfrow = c(1, 1))
+plot(mpg ~ horsepower, data = auto)
+```
+
+There is a negative relation, but it seems quadratic or exponential, not linear.
+
+```{r}
+auto_smpl_lm_fit <- lm(mpg ~ as.numeric(horsepower), data = auto)
+summary(auto_smpl_lm_fit)
+```
+
+When we use a linear model to fit the relationship between 'mpg' and 'horsepower',
+the estimated slope is -0.157845. In other words,
+\[mpg = 39.9358 - 0.157845 * horsepower\]
+
+$R^2$ is pretty good, although it is not very high.
+
+Let's take a look at the t-test result. (In this case, t-test and F-test are the same.)
+Hypotheses are
+
+H0: $\beta_1 = 0$
+
+H1: $\beta_1 \neq 0$
+
+The coefficient's t-statistic value is -24.49, 
+following student-t distribution with 390 df under H0.
+The p-value is very small (<2e-16), so we can reject H0 with common significance levels like 0.05 or 0.01.
+So the relationship is statistically significant.
+To sum up, the relationship is negative, and -0.157845 is not 0 statistically.
+
+Finally, to get the confidence and prediction interval,
+
+```{r}
+new_horsepower_df <- data.frame(horsepower = c(98))
+mpg_conf_int <- predict(auto_smpl_lm_fit, new_horsepower_df,
+  interval = "confidence", level = 0.95)
+mpg_pred_int <- predict(auto_smpl_lm_fit, new_horsepower_df,
+  interval = "prediction", level = 0.95)
+mpg_conf_int
+mpg_pred_int
+```
+
+The 95% confidence interval at horsepower of 98 is $(23.97308, 24.96108)$.
+And, the 95% prediction interval at horsepower of 98 is $(14.8094, 34.12476)$.
+Because the prediction interval considers additional error,
+it is reasonable to be wider than the confidence interval.
+
+
+**(b) Plot the response and the predictor. Use the abline() function**
+**to display the least squares regression line.**
+
+```{r}
+plot(mpg ~ horsepower, data = auto, main = "auto")
+abline(auto_smpl_lm_fit)
+```
+
+
+**(c) Use the plot() function to produce diagnostic plots of the least**
+**squares regression fit. Comment on any problems you see with the fit.**
+
+```{r}
+par(mfrow = c(2, 2))
+plot(auto_smpl_lm_fit)
+```
+
+Diagnostic plots show that the fitting is bad.
+Residual plot has an U-shape pattern, and variance of residual increases as fitted value increase.
+It seems that the data does not follow the normally assumption. Points on the normal Q-Q plot are not on the one straight line.
+Not only that, there are so many points having high leverage values.
+
+I think that the reason that the linear model fit is poor is that,
+as I pointed out above, two variables' relation seems quadratic or exponential shape.
+We should have applied transform or have used other non-linear models.
+
 
 ### \noindent Problem15.
-James et al., Chapter 3, problem 9
+
+**James et al., Chapter 3, problem 9**
+
+**This question involves the use of multiple linear regression on the**
+**Auto data set.**
+```{r}
+auto <- read.csv("ItSL-data/Auto.csv", na.strings = "?")
+summary(auto)
+auto$horsepower <- as.numeric(auto$horsepower)
+auto$origin <- as.factor(auto$origin)
+auto <- subset(auto, complete.cases(auto))
+
+```
+
+**(a) Produce a scatterplot matrix which includes all of the variables**
+**in the data set.**
+
+I include numeric variables in the scatterplot matrix.
+```{r}
+pairs(auto[, -c(8, 9)])
+names(auto)
+```
+
+The 'mpg' seems to have negative, non-linear relations with 'displacement',
+'horsepower', and 'weight' variables. 
+Additionally, The 'mpg' seems negative linear relation with the 'cylinders'.
+There are linear relationship among 'cylinders', 'displacement', 'horsepower', and 'weight' variables.
+The 'acceleration' has negative relationship with 'cylinders', 'displacement', 'horsepower', and 'weight' variables.
+
+
+**(b) Compute the matrix of correlations between the variables using**
+**the function cor(). You will need to exclude the name variable,**
+**cor() which is qualitative.**
+
+```{r}
+cor(auto[, -c(8, 9)])
+```
+
+From this correlation matrix, we can get some information about 
+how strong the linear relation is of each pair.
+For a linear relationship, interpretation of correlations is the same as the answer in (a) can be obtained.
+
+
+
+**(c) Use the lm() function to perform a multiple linear regression**
+**with mpg as the response and all other variables except name as**
+**the predictors. Use the summary() function to print the results.**
+**Comment on the output. For instance:**
+
+```{r}
+auto_multi_lm_fit <- lm(mpg ~ cylinders + displacement + horsepower + weight +
+  acceleration + year + origin, data = auto)
+summary(auto_multi_lm_fit)
+```
+
+**1. Is there a relationship between the predictors and the response?**
+
+Yes. To answer this question, we can do F-test.
+Let $\beta_i, i=1,...,8$ be coefficients in the model (except the intercept.)
+
+H0: $\beta_1 = \beta_2 = ... = \beta_8 = 0$
+
+H1: At least one $\beta_i, i=1, ..., 8$ is not 0.
+
+The F-statistic is 224.5, which follows the F distribution with df 8 and 383.
+The p-value is near 0, so we can reject H0 under a common significance level like 0.05 or 0.01.
+Thus, this relationship is significant. We can say that there is a relationship between the predictors and the response.
+
+
+**2. Which predictors appear to have a statistically significant relationship to the response?**
+
+For this question, we can conduct a t-test for each predictor.
+
+For $i=1,2,...,8$, we can set 8 pair of hypotheses,
+
+H0: $\beta_i = 0$
+
+H1: $\beta_i \neq 0$
+
+Each t-statistic follows the student-t distribution with df=383 under H0.
+
+According to the R output,
+'displacement', 'weight', 'year', and 'origin' are significant under 0.05 significance level.
+So, we can say that the four variables have statistically significant relationships to the 'mpg'. 
+
+
+**3. What does the coefficient for the year variable suggest?**
+
+The coefficient is 0.777. In other words, if other variables are fixed,
+mpg will increase by 0.777 as the year increases 1.
+
+
+**(d) Use the plot() function to produce diagnostic plots of the linear**
+**regression fit. Comment on any problems you see with the fit.**
+**Do the residual plots suggest any unusually large outliers? Does**
+**the leverage plot identify any observations with unusually high**
+**leverage?**
+
+```{r}
+par(mfrow = c(2, 2))
+plot(auto_multi_lm_fit)
+```
+
+Like the simple-linear regression case, diagnostic plots show that the fitting result is poor again.
+The residual plot has a U-shape pattern, and the variance of residual increases as the fitted value increases.
+We may consider some points with absolute residual values ​​greater than 10 as outliers,
+although the points are quite close to other residual values.
+
+Moreover, It seems that the data does not follow the normal distribution assumption.
+Points on the normal Q-Q plot are not on the one straight line at the right tail.
+Not only that, there is a point (14th) having high leverage value.
+
+
+
+**(e) Use the * and : symbols to fit linear regression models with**
+**interaction effects. Do any interactions appear to be statistically**
+**significant?**
+
+Since adding all the interaction terms makes the model too complex, I've only added a few.
+
+```{r}
+auto_multi_lm_fit_interaction <- lm(mpg ~ cylinders + displacement + horsepower + weight +
+  acceleration * origin + year * origin, data = auto)
+summary(auto_multi_lm_fit_interaction)
+```
+
+Yes, interaction terms within year and origin, and within acceleration and origin are
+statistically significant (under the significance level 0.05.)
+
+
+**(f) Try a few different transformations of the variables, such as**
+$log(X), \sqrt{X}, X^2$.
+**Comment on your findings.**
+
+First, let's take the logarithm of 'mpg'.
+```{r}
+auto_multi_lm_fit_logY <- lm(log(mpg) ~ cylinders + displacement + horsepower + weight +
+  acceleration + year + origin, data = auto)
+summary(auto_multi_lm_fit_logY)
+par(mfrow = c(2, 2))
+plot(auto_multi_lm_fit_logY)
+```
+
+The $R^2$ is slightly improved.
+The residual plot becomes much better, but the normal Q-Q plot is bad at the left tail.
+Not only that, there is still a point that has too high leverage values.
+
+Next is 'sqrt(mpg)'.
+
+```{r}
+auto_multi_lm_fit_sqrtY <- lm(sqrt(mpg) ~ cylinders + displacement + horsepower + weight +
+  acceleration + year + origin, data = auto)
+summary(auto_multi_lm_fit_sqrtY)
+par(mfrow = c(2, 2))
+plot(auto_multi_lm_fit_sqrtY)
+```
+
+The residual plot of sqrt(mpg) is better than the non-transform case, 
+but worse than the log(mpg) case.
+Other issues still remain.
+
+Finally, let's add some square terms for some predictors.
+
+```{r}
+auto_multi_lm_fit_Xsquare <- lm(mpg ~ cylinders + displacement + I(displacement)^2 +
+  horsepower + I(horsepower)^2 +  weight + I(weight)^2 +
+  acceleration + year + origin, data = auto)
+summary(auto_multi_lm_fit_Xsquare)
+par(mfrow = c(2, 2))
+plot(auto_multi_lm_fit_Xsquare)
+```
+
+Although adding square terms for some predictors, 
+it does not work well.
+
+
 
 ### \noindent Problem16.
-James et al., Chapter 3, problem 10
+
+**James et al., Chapter 3, problem 10**
+
+**This question should be answered using the Carseats data set.**
+
+```{r}
+carseats <- read.csv("ItSL-data/Carseats.csv")
+names(carseats)
+head(carseats)
+summary(carseats)
+carseats$ShelveLoc <- factor(carseats$ShelveLoc)
+carseats$Urban <- factor(carseats$Urban)
+carseats$US <- factor(carseats$US)
+```
+
+**(a) Fit a multiple regression model to predict Sales using Price,**
+**Urban, and US.**
+
+Let's do EDA.
+
+```{r}
+par(mfrow = c(1, 3))
+plot(Sales ~ Price, data = carseats)
+plot(Sales ~ Urban, data = carseats)
+plot(Sales ~ US, data = carseats)
+
+par(mfrow = c(1, 1))
+plot(Sales ~ Price, data = carseats,
+  col = Urban, pch = as.numeric(carseats$US))
+legend("topright", col=c(1,2,1,2), pch=c(1,1,2,2),
+  legend = c("Not Urban-Not US", "Urban-Not US", "Not Urban- US", "Urban-US"))
+```
+
+Because Urban and US are factors, we can draw a figure.
+Points are too spread out to be considered a linear relationship.
+In all cases, we can observe that there are weak negative relationships.
+
+Anyway, let's fit the data using the given linear model.
+Since there is no mention of the interaction term in the problem, I omit the term.
+
+```{r}
+carseats_lm_fit <- lm(Sales ~ Price + Urban + US, data = carseats)
+summary(carseats_lm_fit)
+```
+
+```{r, echo=FALSE}
+par(mfrow = c(1, 1))
+plot(Sales ~ Price, data = carseats,
+  col = Urban, pch = as.numeric(carseats$US))
+legend("topright", col=c(1,2,1,2), pch=c(1,1,2,2),
+  legend = c("Not Urban-Not US", "Urban-Not US", "Not Urban- US", "Urban-US"))
+legend("topleft", col=c(1,2,1,2), lty=c(1,1,3,3),
+  legend = c("Not Urban-Not US", "Urban-Not US", "Not Urban- US", "Urban-US"))
+
+carseats_coeff <- carseats_lm_fit$coefficients
+abline(carseats_coeff[1], carseats_coeff[2])
+abline(carseats_coeff[1] + carseats_coeff[3],
+  carseats_coeff[2], col=2)
+abline(carseats_coeff[1] + carseats_coeff[4],
+  carseats_coeff[2], lty=3)
+abline(carseats_coeff[1] + carseats_coeff[3] + carseats_coeff[4],
+  carseats_coeff[2], col=2, lty=3)
+```
+
+It is difficult to see the difference in results depending on whether it is Urban or not,
+because the coefficient of 'Urban' is close to 0.
+
+
+**(b) Provide an interpretation of each coefficient in the model. Be**
+**careful—some of the variables in the model are qualitative!**
+
+```{r}
+carseats_lm_fit$coefficients
+```
+If other variables are fixed, the value of 'Sales' decreases by 0.054459 as the 'Price' increases by 1.
+If other variables are fixed, the value of 'Sales' is lower by 0.021916 when it is Urban, than when it is not Urban.
+Likewise, If other variables are fixed, the value of 'Sales' is higher by 1.200573 in the US than not in the US.
+
+
+**(c) Write out the model in equation form, being careful to handle**
+**the qualitative variables properly.**
+
+\[Sales = 13.0435 - 0.0219 * I(Urban) + 1.2006 * I(US) - 0.054459 * Price\]
+
+where $I(Urban)=1$ for Urban, $I(Urban)=0$ otherwise, $I(US)=1$ for US, $I(US)=0$ otherwise.
+
+
+**(d) For which of the predictors can you reject the null hypothesis**
+**H0 : $\beta_j=0$ ?**
+
+The alternative of each t-test is H1: $\beta_j \neq 0$.
+Under common significance levels like 0.05 or 0.01,
+I can reject the null hypothesis for coefficients of 'Price' and 'US'.
+However, I cannot reject the H0 for Urban's coefficient, because its p-value is 0.936.
+Statistically, the coefficient of 'Urban' is not different from 0.
+
+
+**(e) On the basis of your response to the previous question, fit a**
+**smaller model that only uses the predictors for which there is**
+**evidence of association with the outcome.**
+
+```{r}
+carseats_lm_fit_smaller <- lm(Sales ~ Price + US, data = carseats)
+summary(carseats_lm_fit_smaller)
+```
+
+Now, we can reject all t-tests' H0s because all p-values of coefficients are very close to 0.
+
+```{r, echo=FALSE}
+par(mfrow = c(1, 1))
+plot(Sales ~ Price, data = carseats, pch = as.numeric(carseats$US))
+legend("topright", pch = c(1, 2),
+  legend = c("Not US", "US"))
+legend("topleft", lty = c(1, 3),
+  legend = c("Not US", "US"))
+
+carseats_smaller_coeff <- carseats_lm_fit_smaller$coefficients
+abline(carseats_smaller_coeff[1], carseats_smaller_coeff[2])
+abline(carseats_smaller_coeff[1] + carseats_smaller_coeff[3],
+  carseats_smaller_coeff[2], lty = 3)
+```
+
+
+**(f) How well do the models in (a) and (e) fit the data?**
+
+The $R^2$s of the models (a) and (e) are both 0.2393, which are too low.
+The reason may be the data are not strongly linear, as we saw in the EDA process.
+
+```{r, fig.height=2.5}
+par(mfrow = c(1, 4))
+plot(carseats_lm_fit)
+plot(carseats_lm_fit_smaller)
+```
+
+Diagnostic plots are generally good, although the data tends to be clustered in the middle.
+
+
+**(g) Using the model from (e), obtain 95 % confidence intervals for**
+**the coefficient(s).**
+
+I can calculate the intervals by myself using fitted value, standard error, and 'pt' function in R,
+but R offers the super-convenient 'confint' function, which gives us the intervals automatically.
+
+```{r}
+round(confint(carseats_lm_fit_smaller, level=0.95),4)
+```
+
+For the coefficient of the 'price', the 95% CI is (-0.0648, -0.0442).
+And, for the coefficient of the 'US', the 95% CI is (0.6915, 1.7078).
+
+**(h) Is there evidence of outliers or high leverage observations in the**
+**model from (e)?**
+
+Although there are points having big residual values, 
+I think it seems difficult to treat them as outliers or high-leverage observations.
+I think the fundamental problem is that the data isn't linear overall but all spread out,
+not the existence of outliers or high-leverage points.
+
