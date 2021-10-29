@@ -868,16 +868,57 @@ median(Boston$ptratio)
 The median pupil-teacher ratio is 19.05.
 
 
-**(g) Which suburb of Boston has lowest median value of owneroccupied homes? What are the values of the other predictors**
+**(g) Which suburb of Boston has lowest median value of owner occupied homes? What are the values of the other predictors**
 **for that suburb, and how do those values compare to the overall**
 **ranges for those predictors? Comment on your findings.**
 
+```{r}
+which.min(Boston$medv)
+Boston[which.min(Boston$medv),]
+```
+
+The suburb of the 399th row has lowest median value of owner occupied homes.
+
+```{r}
+par(mfrow = c(4,3))
+for(i in 1:12){
+  boxplot(Boston[i], xlab = names(Boston[i]), horizontal = TRUE)
+  points(Boston[399, i], 1, col = "red", pch = 16, cex = 3)
+}
+```
+
+The red dot corresponds to the 399th suburb.
+From boxplot, we can find that the 399th suburbs also has extreme values 
+for 'zn', 'age', 'dis', 'rad', 'black' and quite high value of 'crim', 'nox', 'tax'
+comparing to the overall range of each predictor.
 
 
 **(h) In this data set, how many of the suburbs average more than**
 **seven rooms per dwelling? More than eight rooms per dwelling?**
 **Comment on the suburbs that average more than eight rooms**
 **per dwelling.**
+
+```{r}
+sum(Boston$rm > 7)
+sum(Boston$rm > 8)
+```
+
+64 suburbs have more than seven rooms per dwelling on average.
+And, only 13 suburbs have more than eight rooms per dwelling on average.
+
+```{r}
+par(mfrow = c(4,3))
+for(i in 1:12){
+  boxplot(Boston[i], xlab = names(Boston[i]), horizontal = TRUE)
+  eightroom_idx <- (Boston$rm > 8)
+  points(Boston[eightroom_idx, i], rnorm(sum(eightroom_idx), 1, 0.1), 
+    col = "blue", pch = 16, cex = 1.5)
+}
+```
+
+Blue dots correspond to suburbs that have more than eight rooms per dwelling on average.
+Their per capia crime rates are low, and proportions of blacks are high.
+Moreover, most of them have low 'zn', 'indus', 'dis', 'rad', and 'tax' values and high 'age' values.
 
 
 
