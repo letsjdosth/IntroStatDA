@@ -1,0 +1,100 @@
+---
+title: "Homework Assignment 4"
+author: "Seokjun Choi"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+### \noindent Problem1.
+**Albert and Rizzo, Chapter 9, problem 1**
+
+9.1 (Rounding first base). The data in “rounding.txt” gives the times
+required to round first base for 22 baseball players using three styles: rounding
+out, a narrow angle and a wide angle.1 The goal is to determine if the method
+of rounding first base has a significant effect on times to round first base.
+The data and the format of the data can be viewed using a text editor or
+a spreadsheet. With the data file in the current working directory, input the
+data using
+
+rounding = read.table("rounding.txt", header=TRUE)
+
+Check using the str function that the data is in stacked format with three
+variables: time, method, player, where time is numeric and method and
+player are factors.
+Analyze the data assuming a randomized block design with time to round
+first base as the response, method of rounding first as the treatment, and
+player as the block variable. Plot residuals to check whether the assumptions
+for the distribution of random error appear to be valid.
+
+
+### \noindent Problem2.
+**Albert and Rizzo, Chapter 9, problem 2**
+
+9.2 (Speed of light). The morley data in R contains the classical data
+of Michaelson and Morley on the speed of light, recording five experiments
+of 20 consecutive runs each. The response is the speed of light measurement Speed.
+The experiment is Expt and the run is Run. See the documentation (?morley) 
+and also http://lib.stat.cmu.edu/DASL/Stories/SpeedofLight.html
+for more details about the experiments and the dataset.
+
+Use the str function to check that there are 100 observations of the response 
+Speed, Expt, and Run; all integer variables. 
+Convert Expt and Run to factors using
+
+morley\$Expt = factor(morley\$Expt)
+
+morley\$Run = factor(morley\$Run)
+
+Display a boxplot of Speed by Expt. Speed of light is a constant,
+so we see there are some problems because the measurements of speed do not seem to
+be consistent across the five experiments.
+The data can be viewed as a randomized block experiment.
+What is the null hypothesis of interest?
+Analyze the data and residuals and summarize your conclusions.
+
+
+### \noindent Problem3.
+The data frame tb.dilute is available in the ISwR package.
+Perform a two-way analysis of variance of these data.
+Explain your model, analysis and conclusions.
+
+### \noindent Problem4.
+Analyze the vitcap2 dataset in the ISwR package using analysis of covariance.
+Explain your model, analysis and conclusions.
+
+### \noindent Problem5.
+An experiment was run to investigate the amount of weight loss (in grams)
+by ground beef hamburgers after grilling or frying, and
+how much the weight loss is affected by the percentage of fat in the beef before cooking.
+The experiment involved 2 factors:
+cooking method (with two levels, frying and grilling) and
+fat content (with 3 levels: 10%, 15% and 20%).
+Hamburger patties weighing 110g each were prepared from meat with the required fat content.
+There were 30 cooking time slots which were randomly assigned to the treatments 
+in such a way that each treatment was observed 5 times. 
+The patty weighs after cooking are shown below:
+
+- Method Frying, Fat Content 10%: 81, 88, 85, 84, 84
+- Method Frying, Fat Content 15%: 85, 80, 82, 80, 82
+- Method Frying, Fat Content 20%: 71, 77, 72, 80, 80
+- Method Grilling, Fat Content 10%: 84, 84, 82, 81, 86
+- Method Grilling, Fat Content 15%: 83, 88, 85, 86, 88
+- Method Grilling, Fat Content 20%: 78, 75, 78, 79, 82 
+
+
+1. Perform EDA.
+
+2. Perform a two-way analysis of variance. 
+Explain your model and your conclusions. In particular: 
+- Compare the effects of the 3 levels of fat 
+(taking into account cooking methods if needed) and interpret your results; 
+- Give a 90% confidence interval for the mean difference in weight 
+after cooking between frying and grilling 110g hamburgers. 
+
+
+### \noindent Problem6.
+In the ISwR malaria dataset, analyze the risk of malaria via logistic regression 
+with age and the log-transformed antibody level as explanatory variables. 
+Explain your model, analysis and conclusions.
