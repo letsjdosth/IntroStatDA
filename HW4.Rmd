@@ -10,55 +10,231 @@ output:
 ### \noindent Problem1.
 **Albert and Rizzo, Chapter 9, problem 1**
 
-9.1 (Rounding first base). The data in “rounding.txt” gives the times
-required to round first base for 22 baseball players using three styles: rounding
-out, a narrow angle and a wide angle.1 The goal is to determine if the method
-of rounding first base has a significant effect on times to round first base.
-The data and the format of the data can be viewed using a text editor or
-a spreadsheet. With the data file in the current working directory, input the
-data using
+**9.1 (Rounding first base). The data in “rounding.txt” gives the times**
+**required to round first base for 22 baseball players using three styles: rounding**
+**out, a narrow angle and a wide angle. The goal is to determine if the method**
+**of rounding first base has a significant effect on times to round first base.**
+**The data and the format of the data can be viewed using a text editor or**
+**a spreadsheet. With the data file in the current working directory, input the**
+**data using**
 
-rounding = read.table("rounding.txt", header=TRUE)
+```{r}
+rounding <- read.table("RX-data/rounding.txt", header = TRUE)
+head(rounding)
+```
 
-Check using the str function that the data is in stacked format with three
-variables: time, method, player, where time is numeric and method and
-player are factors.
-Analyze the data assuming a randomized block design with time to round
-first base as the response, method of rounding first as the treatment, and
-player as the block variable. Plot residuals to check whether the assumptions
-for the distribution of random error appear to be valid.
+**Check using the str function that the data is in stacked format with three**
+**variables: time, method, player, where time is numeric and method and**
+**player are factors.**
+
+```{r}
+str(rounding)
+rounding$method <- factor(rounding$method)
+rounding$block <- factor(rounding$block)
+str(rounding)
+
+par(mfrow = c(1, 1))
+boxplot(times ~ method, data = rounding) #EDA
+```
+
+**Analyze the data assuming a randomized block design with time to round**
+**first base as the response, method of rounding first as the treatment, and**
+**player as the block variable. Plot residuals to check whether the assumptions**
+**for the distribution of random error appear to be valid.**
+
+Let $i=1,2,3$ be indices for methods and $j=1,2,...,22$ be indices for blocks (or, player).
+Note that there is only one data point for each $(i,j)$. So I omit the cell-wise(?) index.
+Then, the model becomes
+\[y_{ij} = \mu + \alpha_i + \beta_j + \epsilon_{ij}\]
+where $\alpha_i$ are the effects of 'method', and $\beta_j$ are the block effects.
+and $\epsilon_{ij}$ are iid, normally distributed errors with mean 0 and common variance $\sigma^2$.
+
+```{r}
+rounding_aov_fit <- aov(times ~ method + block, data = rounding)
+summary(rounding_aov_fit)
+```
+
+Let's test whether the effects of 'method' and effects of blocks are significant or not.
+hypotheses are
+
+H0: all $\alpha_i$ are 0. (the method-effects are not significant.)
+
+H1: at least one $\alpha_i$ is not 0. (the method-effects are significant.)
+
+and
+
+H0: all $\beta_i$ are 0. (the block effects are not significant.)
+
+H1: at least one $\beta_i$ is not 0. (the block effects are significant.)
+
+The anova table shows F values and p-values for each test.
+For the former one, F value is 6.288, and it follows the F-distirbution with degrees of freedom 2 and 42 under H0.
+The p-value is 0.00408, so se can reject the H0 with common significance levels like 0.01 or 0.05.
+Thus, we can say that the method-effects are significant.
+
+For the latter test, we can find that the F value is 26.970 which is pretty high, and under H0 it follows the
+F-distribution with df 21 and 42. The p-value is very close to 0, so we can reject the H0 with ordinary significance level.
+Therefore, we can say that the block effects are also significant.
+
+Next, let's see the estimated values for the effects of 'methods'.
+(We do not have an interest in interpreting the block effect.)
+The upper table shows the estimated difference between means of each method and grand mean.
+The lower table is about the mean values themselves.
+
+```{r}
+model.tables(rounding_aov_fit, cterms = "method")
+model.tables(rounding_aov_fit, cterms = "method", type = "mean")
+```
+
+To see the aspect of the difference, let's use the tukey's significant difference method.
+
+```{r}
+rounding_tukeydiff <- TukeyHSD(rounding_aov_fit, which = 1) #only 'method'
+rounding_tukeydiff
+par(mfrow = c(1, 1))
+plot(rounding_tukeydiff)
+```
+
+'WidAngle' is different significantly from other two methods.
+
+Finally, for model diagnosis, let's draw the residual plot and the normal q-q plot.
+
+```{r}
+par(mfrow = c(2, 2))
+plot(rounding_aov_fit)
+```
+
+In the residual plot, we can find a point that has high-residual value (7-th).
+Not only that, the residuals have shape like a diamond. 
+So we have to check whether the homogeneous variance assumption is valid or not.
+
+In addition, in the normal q-q plot, tail parts of both two direction are not on a line.
+It is questionable whether that the normal assumption is satisfied.
+Especially, the 7-th data point is problematic. We need to act on that point.
+
 
 
 ### \noindent Problem2.
 **Albert and Rizzo, Chapter 9, problem 2**
 
-9.2 (Speed of light). The morley data in R contains the classical data
-of Michaelson and Morley on the speed of light, recording five experiments
-of 20 consecutive runs each. The response is the speed of light measurement Speed.
-The experiment is Expt and the run is Run. See the documentation (?morley) 
-and also http://lib.stat.cmu.edu/DASL/Stories/SpeedofLight.html
-for more details about the experiments and the dataset.
+**9.2 (Speed of light). The morley data in R contains the classical data**
+**of Michaelson and Morley on the speed of light, recording five experiments**
+**of 20 consecutive runs each. The response is the speed of light measurement Speed.**
+**The experiment is Expt and the run is Run. See the documentation (?morley)**
+**and also http://lib.stat.cmu.edu/DASL/Stories/SpeedofLight.html**
+**for more details about the experiments and the dataset.**
 
-Use the str function to check that there are 100 observations of the response 
-Speed, Expt, and Run; all integer variables. 
-Convert Expt and Run to factors using
+```{r}
+head(morley)
+# ?morley
+```
 
-morley\$Expt = factor(morley\$Expt)
+- Expt: The experiment number, from 1 to 5.
+- Run: The run number within each experiment.
+- Speed: Speed-of-light measurement.
 
-morley\$Run = factor(morley\$Run)
+**Use the str function to check that there are 100 observations of the response**
+**Speed, Expt, and Run; all integer variables.**
 
-Display a boxplot of Speed by Expt. Speed of light is a constant,
-so we see there are some problems because the measurements of speed do not seem to
-be consistent across the five experiments.
-The data can be viewed as a randomized block experiment.
-What is the null hypothesis of interest?
-Analyze the data and residuals and summarize your conclusions.
+```{r}
+str(morley)
+```
+
+**Convert Expt and Run to factors using**
+
+```{r}
+morley$Expt <- factor(morley$Expt)
+morley$Run <- factor(morley$Run)
+str(morley)
+```
+
+
+**Display a boxplot of Speed by Expt.**
+**Speed of light is a constant, so we see there are some problems**
+**because the measurements of speed do not seem to be consistent across the five experiments.**
+
+```{r}
+boxplot(Speed ~ Expt, data = morley)
+```
+
+**The data can be viewed as a randomized block experiment.**
+**What is the null hypothesis of interest?**
+**Analyze the data and residuals and summarize your conclusions.**
+
+Let's test whether the measurements of light speed are consistent or not across the five experiments.
+Because there is another factor, 'run', I will use it as a block.
+
+Let $i=1,...,5$ be indices for the experiments and $j=1,2,...,20$ be indices for the run numbers.
+Again, these dataset has one data point for each $(i,j)$. So it's not needed to use a subscript within each cell.
+
+Then, the model becomes
+\[y_{ij} = \mu + \alpha_i + \beta_j + \epsilon_{ij}\]
+where $\alpha_i$ are the experiment effects, and $\beta_j$ are the block (run) effects.
+and $\epsilon_{ij}$ are iid, normally distributed errors with mean 0 and common variance $\sigma^2$.
+
+Next, our hypothesis are
+H0 : $\alpha_i=0$ for all $i$
+(the measurements of light speed are consistent across the five experiments)
+
+H1 : at least $\alpha_i$ is not 0.
+(the measurements of light speed are not consistent across the five experiments)
+
+```{r}
+morley_aov_fit <- aov(Speed ~ Expt + Run, data = morley)
+summary(morley_aov_fit)
+```
+
+The block effects are not significant. So, let's delete the variable. Then,
+```{r}
+morley_aov_fit2 <- aov(Speed ~ Expt, data = morley)
+summary(morley_aov_fit2)
+```
+
+The F-value is 4.288, and it follows the F distribution with df 4 and 95.
+The p-value is 0.00311, so we can reject H0 under significance level higher than 0.00311, like 0.01 or 0.05.
+Thus, we cannot say that the measurements of light speed are not consistent across the five experiments.
+
+Here are differences from grand mean, and mean values of the experiment groups.
+```{r}
+model.tables(morley_aov_fit2, cterms = "Expt")
+model.tables(morley_aov_fit2, cterms = "Expt", type = "mean")
+```
+
+And, tukey's difference test says that there are differences between experiment 1 and 4, and between 1 and 5.
+```{r}
+morley_tukeydiff <- TukeyHSD(morley_aov_fit2, which = 1)
+morley_tukeydiff
+par(mfrow = c(1, 1))
+plot(morley_tukeydiff)
+```
+
+Finally, here are the residual plot and the normal q-q plot.
+
+```{r}
+par(mfrow = c(2, 2))
+plot(morley_aov_fit2)
+```
+
+Except for two or three points that seem outliers, they looks fine.
+We cannot find any pattern from the residual plot, 
+and almost all points are making a line in the q-q plot (if we delete the three points).
 
 
 ### \noindent Problem3.
-The data frame tb.dilute is available in the ISwR package.
-Perform a two-way analysis of variance of these data.
-Explain your model, analysis and conclusions.
+**The data frame tb.dilute is available in the ISwR package.**
+**Perform a two-way analysis of variance of these data.**
+**Explain your model, analysis and conclusions.**
+
+```{r}
+library(ISwR)
+tb <- tb.dilute
+head(tb)
+is.factor(tb$animal)
+is.factor(tb$logdose)
+```
+
+
+
 
 ### \noindent Problem4.
 Analyze the vitcap2 dataset in the ISwR package using analysis of covariance.
