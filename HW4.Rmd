@@ -57,9 +57,9 @@ summary(rounding_aov_fit)
 Let's test whether the effects of 'method' and effects of blocks are significant or not.
 hypotheses are
 
-H0: all $\alpha_i$ are 0. (the method-effects are not significant.)
+H0: all $\alpha_i$ are 0. (the method-effects are not significant on average.)
 
-H1: at least one $\alpha_i$ is not 0. (the method-effects are significant.)
+H1: at least one $\alpha_i$ is not 0. (the method-effects are significant on average.)
 
 and
 
@@ -129,6 +129,7 @@ head(morley)
 # ?morley
 ```
 
+According to the R help file, three variables are
 - Expt: The experiment number, from 1 to 5.
 - Run: The run number within each experiment.
 - Speed: Speed-of-light measurement.
@@ -228,10 +229,100 @@ and almost all points are making a line in the q-q plot (if we delete the three 
 ```{r}
 library(ISwR)
 tb <- tb.dilute
+# ?tb.dilute
 head(tb)
 is.factor(tb$animal)
 is.factor(tb$logdose)
 ```
+According to the tb.dilute's R help file, 
+this dataset consists of 18 data points, with three variables.
+Each variable is
+- reaction : a numeric vector, reaction sizes (average of diameters) for tuberculin skin pricks.
+- animal: a factor with levels 1–6.
+- logdose: a factor with levels 0.5, 0, and -0.5.
+
+```{r}
+par(mfrow = c(1, 2))
+boxplot(reaction ~ animal, data = tb) #EDA
+boxplot(reaction ~ logdose, data = tb)
+```
+
+we can find that the reaction sizes increase as the animal factor's values increase, and
+the reaction sizes decrease as the logdose factor's values decrease.
+
+
+When considering the type of each variable, a natural model is
+
+\[y_{ij} = \mu + \alpha_i + \beta_j + \epsilon_{ij}\]
+for $i=1,2,...6, j=1,2,3$,
+where $y_{ij}$ are reaction sizes of i-th animal factor and j-th logdose factor,
+and $\alpha_i$ are i-th animal factor effect, $\beta_j$ are j-th logdose factor effect
+(0.5, 0, -0.5, respectively),
+and $\epsilon_{ij}$ are iid error, following $N(0, \sigma^2)$.
+
+Note that we cannot add an interaction term, because there is only one data point
+for each (i,j)-combination. If we add the term, the degrees of freedom of residual would be 0.
+
+Let's fit the model.
+```{r}
+tb_aov_fit <- aov(reaction ~ animal + logdose, data = tb)
+summary(tb_aov_fit)
+```
+
+To check whether each effect is significant or not, we can do tests.
+Specifically, for $\alpha_i$,
+
+H0: all $\alpha_i$ are 0. (There is no effect of animal factor on average.)
+
+H1: there is at least different $\alpha_i$. (The effect of animal factor is significant on average.)
+
+and for $\beta_j$,
+
+H0: all $\beta_j$ are 0. (There is no effect of logdose factor on average.)
+
+H1: there is at least different $\beta_j$. (The effect of logdose factor is significant on average.)
+
+Let's see the above anova table that R gives to us
+The F-value of the first test is 8.264, which following the F-distribution with df 5 and 10 under H0.
+The p-value is 0.00253, so we can reject the H0 with significance level larger than 0.00253, like 0.05 or 0.01.
+Thus, we can say that the effect of animal factor is significant.
+
+Next, in case of the $\beta_j$'s test,
+the F-value is 42.482, which following the F-distribution with df 2 and 10 under H0.
+The p-value is close to 0, so we can reject the H0 with a common significance level.
+Therefore, we can conclude that the effect of logdose factor is also significant.
+
+
+Now, using fitted values and Tukey’s multiple comparison method, let's compare group means.
+
+```{r}
+model.tables(tb_aov_fit, type = "means")
+tb_tukeydiff <- TukeyHSD(tb_aov_fit, which = c("animal", "logdose"))
+tb_tukeydiff
+par(mfrow = c(1, 2))
+plot(tb_tukeydiff, las = 1)
+```
+
+Three pairs of animal factors (5-1, 6-1, 6-2) are different.
+Not only that, two pairs of logdose factor (between -0.5 and 0.5, and between -0.5 and 0)
+does not include 0 in their CI.
+
+Finally, here are the residual plot and the normal q-q plot.
+```{r}
+par(mfrow = c(2, 2))
+plot(tb_aov_fit)
+```
+
+In the both plots, we can find two outliers (13th and 14th points).
+Even if we talk except for those two points, there are other problems.
+We can find that a weak U-shape pattern in the residual plot.
+And we can see that data points are not perfectly on the line in the normal q-q plot,
+
+But depending on point of view, some other researcher may not think
+that it is terribly problematic except for two outliers.
+The U-shape is very weak, and the data points are 'nearly' linear in the q-q plot.
+It is also known that ANOVA is quite robust!
+So, I guess someone might say it's okay. It's a bit vague situation.
 
 
 
