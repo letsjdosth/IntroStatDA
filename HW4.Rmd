@@ -328,20 +328,151 @@ So, I guess someone might say it's okay. It's a bit vague situation.
 
 
 ### \noindent Problem4.
-Analyze the vitcap2 dataset in the ISwR package using analysis of covariance.
-Explain your model, analysis and conclusions.
+**Analyze the vitcap2 dataset in the ISwR package using analysis of covariance.**
+**Explain your model, analysis and conclusions.**
+
+```{r}
+library(ISwR)
+# ?vitcap2
+vital <- vitcap2
+vital$group <- factor(vital$group)
+str(vital)
+```
+
+'vitcap2' dataset has 84 data points and 3 variables. Each column is
+
+- group : a numeric vector; group codes are 1: exposed > 10 years, 2: exposed < 10 years, 3: not exposed.
+- age : a numeric vector, age in years.
+- vital.capacity : a numeric vector, vital capacity (a measure of lung volume) (l).
+
+Note that each group has different number of points. In other words, this dataset is imbalanced.
+```{r}
+dim(subset(vital, group == 1))
+dim(subset(vital, group == 2))
+dim(subset(vital, group == 3))
+```
+
+
+Let's do EDA seeing some figures.
+```{r}
+par(mfrow = c(1, 2))
+boxplot(vital.capacity ~ group, data = vital)
+colors <- c("#66BD63", "red", "blue")
+plot(vital.capacity ~ age, data = vital, pch = 19, col = colors[group])
+legend("bottomleft", pch=19, col=colors,
+  legend = c("group 1", "group 2", "group 3"))
+```
+
+In the boxplot, we can find that group 2's and 3's medians of vital capacity are similar, 
+but seem different from group 1's.
+Not only that, in the scatterplot,
+we can see the negative relationship between age and vital capacity.
+
+Let's consider a model,
+\[y_{ij} = \mu +\alpha_i + (\beta + \gamma_i) x_{ij} + \epsilon\]
+for $i=1,2,3$, $j=1,...,n_i$, $n_1=12, n_2=28, n_3=44$
+where
+- $y_{ij}$ : vital capacity of i-th group, j-th subject
+- $\alpha_i$ : i-th group effect
+- $x_{ij}$ : age of i-th group, j-th subject
+- $\gamma_{ij}$ : interaction with age and group
+and assume that $\epsilon ~ N(0, \sigma^2)$, iid.
+
+Here is the fitting result.
+```{r}
+vital_lm_fit <- lm(vital.capacity ~ group * age, data = vital)
+summary(vital_lm_fit)
+anova(vital_lm_fit)
+```
+
+To begin with, let's do the F test to show whether this model is significant or not.
+
+H0 : all $\alpha_i$, $\beta$, $\gamma_i$ are 0.
+
+H1 : at least one $\alpha_i$, $\beta$, $\gamma_i$ is not 0.
+
+The F-statistic value is 11.39, which following the F distribution with df 5 and 78 under H0.
+The p-value is very close to 0, so we can reject H0. Thus this model is meaningful.
+
+Next, let's see the anova table.
+First hypotheses are
+
+H0 : all $\gamma_i$ are 0.
+
+H1 : at least one $\gamma_i$ is not 0.
+
+The F value of 'group:age' is 3.5402, which follows the F-distribution with df 2, 78 under H0.
+If we use a significance level 0.05, we cannot reject H0. But using 0.01, we can.
+
+Next,
+
+H0 : all $\alpha_i$ are 0.
+
+H1 : at least one $\alpha_i$ is not 0.
+
+The F value of 'group' is 3.8912, which follows the F-distribution with df 2, 78 under H0.
+Again, if we use a significance level 0.05, we cannot reject the H0. But using 0.01, we can reject it.
+
+Finally,
+
+H0 : $\beta = 0$
+
+H1 : $\beta \neq 0$
+
+The F-value of age is 42.0915, which follows the F-distribution with df 1, 78 under H0.
+The p-value is nearly 0, so we can reject H0.
+
+
+So, if we use 0.01 significance level, we can reduce the model to simpler one like
+\[y_{j} = \mu + \beta x_{ij} + \epsilon\]
+for $j=1,...,84$. But I'll skip this work.
+
+
+To sum up the fitting coefficients, for group 1,
+\[\hat{y_{1j}} = 8.1834 - 0.0851 x_{1j}\]
+and for group 2,
+\[\hat{y_{2j}} = 8.1834 - 1.9534 + (-0.0851 + 0.0386) x_{2j}\]
+and for group 3,
+\[\hat{y_{3j}} = 8.1834 - 2.5031 + (-0.0851 + 0.0545) x_{3j}\]
+
+```{r}
+par(mfrow = c(1, 1))
+plot(vital.capacity ~ age, data = vital, pch = 19, col = colors[group])
+legend("bottomleft", pch = 19, col = colors,
+  legend = c("group 1", "group 2", "group 3"))
+vital_coeff <- vital_lm_fit$coefficients
+vital_coeff
+abline(vital_coeff[1], vital_coeff[4], col = colors[1])
+abline(vital_coeff[1]+vital_coeff[2], vital_coeff[4]+vital_coeff[5], col = colors[2])
+abline(vital_coeff[1]+vital_coeff[3], vital_coeff[4]+vital_coeff[6], col = colors[3])
+```
+
+Finally, here are the residual plots and the normal q-q plot.
+
+```{r}
+par(mfrow = c(2, 2))
+plot(vital_lm_fit)
+```
+
+The residual plot seems fine.
+In the normal q-q plot, we can find that points on the right tail part are not on the straight line.
+This appears to violate the normal distribution assumption weakly.
+
+
 
 ### \noindent Problem5.
-An experiment was run to investigate the amount of weight loss (in grams)
-by ground beef hamburgers after grilling or frying, and
-how much the weight loss is affected by the percentage of fat in the beef before cooking.
-The experiment involved 2 factors:
-cooking method (with two levels, frying and grilling) and
-fat content (with 3 levels: 10%, 15% and 20%).
-Hamburger patties weighing 110g each were prepared from meat with the required fat content.
-There were 30 cooking time slots which were randomly assigned to the treatments 
-in such a way that each treatment was observed 5 times. 
-The patty weighs after cooking are shown below:
+**An experiment was run to investigate the amount of weight loss (in grams)**
+**by ground beef hamburgers after grilling or frying, and**
+**how much the weight loss is affected by the percentage of fat in the beef before cooking.**
+**The experiment involved 2 factors:**
+
+- cooking method (with two levels, frying and grilling)
+- fat content (with 3 levels: 10%, 15% and 20%)
+
+**Hamburger patties weighing 110g each were prepared from meat with the required fat content.**
+**There were 30 cooking time slots which were randomly assigned to the treatments**
+**in such a way that each treatment was observed 5 times.**
+**The patty weighs after cooking are shown below:**
 
 - Method Frying, Fat Content 10%: 81, 88, 85, 84, 84
 - Method Frying, Fat Content 15%: 85, 80, 82, 80, 82
@@ -350,15 +481,163 @@ The patty weighs after cooking are shown below:
 - Method Grilling, Fat Content 15%: 83, 88, 85, 86, 88
 - Method Grilling, Fat Content 20%: 78, 75, 78, 79, 82 
 
+```{r}
+method <- factor(rep(c("frying", "grilling"), each = 5 * 3))
+fat <- factor(rep(c("10%", "15%", "20%"), each = 5, times = 2))
+weightloss <- c(81, 88, 85, 84, 84, 85, 80, 82, 80, 82, 71, 77, 72, 80, 80,
+  84, 84, 82, 81, 86, 83, 88, 85, 86, 88, 78, 75, 78, 79, 82)
+wl_data <- data.frame(method, fat, weightloss)
+```
 
-1. Perform EDA.
+**1. Perform EDA.**
 
-2. Perform a two-way analysis of variance. 
-Explain your model and your conclusions. In particular: 
-- Compare the effects of the 3 levels of fat 
-(taking into account cooking methods if needed) and interpret your results; 
-- Give a 90% confidence interval for the mean difference in weight 
-after cooking between frying and grilling 110g hamburgers. 
+To begin with, let's draw boxplots.
+
+```{r}
+par(mfrow = c(1, 2))
+boxplot(weightloss ~ method, data = wl_data)
+boxplot(weightloss ~ fat, data = wl_data)
+par(mfrow = c(1, 1))
+boxplot(weightloss ~ method + fat, data = wl_data,
+  las = 2, cex.axis = 0.8, xlab = "")
+```
+
+The difference between two methods seems small.
+However, in the case of the fat, the level '20%' is very different from the other two levels.
+The box of 20% even does not overlap the other two boxes.
+
+```{r}
+par(mfrow = c(1, 2))
+with(data = wl_data, expr = {
+interaction.plot(method, fat, response = weightloss)
+interaction.plot(fat, method, response = weightloss)
+})
+```
+
+In interaction plots, each lines are not parallel.
+It implies there may be an interaction between 'method' and 'fat'.
+
+
+**2. Perform a two-way analysis of variance.**
+**Explain your model and your conclusions. In particular:**
+
+**- Compare the effects of the 3 levels of fat (taking into account cooking methods if needed) and interpret your results**
+
+**- Give a 90% confidence interval for the mean difference in weight after cooking between frying and grilling 110g hamburgers.**
+
+Now, our model is
+\[y_{ijk} = \mu + \alpha_i + \beta_j + \gamma_{ij} + \epsilon_{ijk}\]
+for $i=1,2$, $j=1,2,3$, and $k=1,2,3,4,5$, 
+where
+
+- y_{ijk}: amount of weight loss of i-th method(frying, grilling), j-th fat level (10%, 15%, 20%), and k-th observations
+- $\alpha_i$: i-th method effect
+- $\beta_j$: j-th fat level effect
+- $\gamma_{ij}$ : interaction effect between i-th method and j-th fat level
+
+and $\epsilon_{ijk}$ are iid normal random variable with mean 0 and variance $\sigma^2$.
+
+```{r}
+wl_aov_fit <- aov(weightloss ~ method * fat, data = wl_data)
+summary(wl_aov_fit)
+```
+
+First test is for the interaction term.
+
+H0 : all $\gamma_{ij}$ are 0.
+
+H1 : at least one $\gamma_{ij}$ is not 0.
+
+The F-value is 2.399, following the F-distribution with df 2 and 24.
+We cannot reject H0 under common significance levels like 0.05 or 0.01,
+because the p-value (0.112) is larger than these significance levels.
+So, we cannot conclude that the interaction term is statistically significant.
+
+Thus, let's reduce the model to the simpler one.
+
+Now, our model becomes
+
+\[y_{ijk} = \mu + \alpha_i + \beta_j + \epsilon_{ijk}\]
+for $i=1,2$, $j=1,2,3$, and $k=1,2,3,4,5$, 
+under the same notation and assumption.
+
+The fitting result for the new model is here.
+```{r}
+wl_aov_fit2 <- aov(weightloss ~ method + fat, data = wl_data)
+summary(wl_aov_fit2)
+```
+
+First Hypotheses are
+
+H0: All $\alpha_i$ are 0.
+
+H1: At least one $\alpha_i$ is 0. (or, $\alpha_2 \neq 0$)
+
+The F-value of the 'method' is 3.247, which follows the F-distribution with df 1 and 26.
+The p-value is 0.0832, so we cannot reject H0 under common significance level like 0.05 or 0.01.
+In other words, we cannot conclude that there is a difference between two cooking methods.
+
+Second Hypotheses are
+
+H0: All $\beta_j$ are 0.
+
+H1: At least one $\beta_j$ is not 0.
+
+The F-value of the 'fat' is 18.591, following the F-distribution with df 2 and 26.
+The p-value is so close to 0, so we can reject the H0.
+This means that there is a significant difference on the amount of weight loss among fat levels.
+
+
+Next, next table show fitted mean differences from grand mean by each level of fat.
+
+```{r}
+model.tables(wl_aov_fit2, cterms = "fat")
+```
+
+And, this table show the mean values for each level of fat.
+
+```{r}
+model.tables(wl_aov_fit2, cterms = "fat", type = "mean")
+```
+
+To see how they are differ, I will use the tukey's significant difference method.
+Following the problem's direction, I use 90% confidence level for this work.
+
+```{r}
+wl_tukeydiff <- TukeyHSD(wl_aov_fit2, which = 2, conf = 0.9) #for fat
+wl_tukeydiff
+par(mfrow = c(1, 1))
+plot(wl_tukeydiff)
+```
+
+From this R output, we can see the 90% confidence interval for the mean difference in weight among three fat level.
+Between the fat levels 10% and 20%, and between the levels 15% group and 20% group,
+we can find significant differences on their average.
+
+In addition, here are 90% CIs between two coocking methods, which are requested in the problem.
+
+```{r}
+wl_tukeydiff2 <- TukeyHSD(wl_aov_fit2, which = 1, conf = 0.9) #for method
+wl_tukeydiff2
+par(mfrow = c(1, 1))
+plot(wl_tukeydiff2)
+```
+
+This 90% CI does not include zero.
+This is a consistent result because the p-value of the F test about 'method' is 0.070.
+Under significance level 0.1, we cannot reject H0.
+(Note that the tests described in the previous paragraph used different significance levels, 0.05 or 0.01,
+so I rejected H0.)
+
+Finally, for model diagnosis, let's draw the residual plot and the normal q-q plot.
+
+```{r}
+par(mfrow = c(2, 2))
+plot(wl_aov_fit2)
+```
+
+All things look fine. We cannot find an outlier nor a pattern in the residual plot.
+Points on the normal q-q plot seem straight enough.
 
 
 ### \noindent Problem6.
