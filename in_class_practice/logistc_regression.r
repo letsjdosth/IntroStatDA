@@ -22,9 +22,27 @@ summary(M1)
 # intercept: basic reference case
 #   (in this case, no-smoking, no-obesity, no-snoring)
 # t-test : same as lin.model
-# 2. residual deviance (df : rel to #class)
+# 2. residual deviance (df : rel to #class). only intercept model(null) vs our model now(alternative)
 # 3. AIC, ... (for model comparison)
 
-anova(M1)
+anova(M1) #analysis of 'deviance'
 
 M2 = glm(hyp.table ~ obesity + snoring, family = binomial("logit"))
+summary(M2)
+anova(M2)
+anova(M2, test="Chisq")
+
+# Terms added sequentially (first to last)
+
+
+#         Df Deviance Resid. Df Resid. Dev Pr(>Chi)
+# NULL                        7    14.1259
+# obesity  1   6.8260         6     7.2999 0.008984 ** # null vs intercept+obesity
+# snoring  1   5.6218         5     1.6781 0.017738 *  # intercept+obesity vs intercept+obesity+snoring
+
+
+#Odds-estimates
+exp(cbind(Or = coef(M2), confint(M2)))
+# 'odds ratio per unit change in the covariate'
+
+
