@@ -359,7 +359,7 @@ par(mfrow = c(1, 2))
 boxplot(vital.capacity ~ group, data = vital)
 colors <- c("#66BD63", "red", "blue")
 plot(vital.capacity ~ age, data = vital, pch = 19, col = colors[group])
-legend("bottomleft", pch=19, col=colors,
+legend("bottomleft", pch = 19, col = colors,
   legend = c("group 1", "group 2", "group 3"))
 ```
 
@@ -519,6 +519,7 @@ It implies there may be an interaction between 'method' and 'fat'.
 
 
 **2. Perform a two-way analysis of variance.**
+
 **Explain your model and your conclusions. In particular:**
 
 **- Compare the effects of the 3 levels of fat (taking into account cooking methods if needed) and interpret your results**
@@ -641,6 +642,180 @@ Points on the normal q-q plot seem straight enough.
 
 
 ### \noindent Problem6.
-In the ISwR malaria dataset, analyze the risk of malaria via logistic regression 
-with age and the log-transformed antibody level as explanatory variables. 
-Explain your model, analysis and conclusions.
+**In the ISwR malaria dataset, analyze the risk of malaria via logistic regression**
+**with age and the log-transformed antibody level as explanatory variables.**
+**Explain your model, analysis and conclusions.**
+
+```{r}
+library(ISwR)
+str(malaria)
+# ?malaria
+summary(malaria)
+```
+There are 100 data points, and 4 variables.
+Each variable is
+
+- subject: subject code.
+- age: age in years.
+- ab: antibody level.
+- mal: a numeric vector code, Malaria: 0: no, 1: yes.
+
+
+Let's look at the data.
+
+```{r}
+par(mfrow = c(2, 1))
+plot(jitter(mal, 0.5) ~ jitter(age, 0.5), pch = 19, data = malaria,
+  xlim = c(-1, 10), ylab = "malaria", xlab = "age")
+plot(jitter(mal, 0.15) ~ log(ab), pch = 19, data = malaria, 
+  xlim = c(-1, 10), ylab = "malaria", xlab = "log(antibody level)")
+```
+```{r}
+par(mfrow = c(1, 1))
+colors <- c("red", "blue")
+plot(log(ab) ~ age, col = colors[mal + 1], pch = 19, data = malaria)
+legend("bottomleft", pch = 19, col = colors,
+  legend = c("mal-no", "mal-yes"))
+```
+
+It's hard to find a relation between age and malaria.
+However, it seems that someone who has a higher log-transformed antibody level is less likely to have malaria.
+Note that there is no explanatory variable of complete separation.
+
+
+Let's set a model about the probability of having malaria using other two variables, 'age' and log transformed 'ab'.
+Now, our model is
+\[logit(P(y_i = 1 | x_{i1}, x_{i2})) = \beta_0 + \beta_1 x_{i1} + \beta_2 *x_{i2}\]
+for i = 1,2,...,100, where
+
+- $y_i$: 1 if i-th sample has malaria, 0 otherwise
+- $x_i1$: age of i-th sample
+- $x_i2$: log transformed antibody level of i-th sample
+
+```{r}
+mal_glm_fit <- glm(mal ~ age + log(ab), data = malaria, family = "binomial")
+summary(mal_glm_fit)
+```
+
+To start with, let's check whether this model is significant or not.
+
+H0 : $\beta_j$ ($j=1,2$) are 0.
+
+H1 : at least one $\beta_j$ ($j=1,2$) is not 0.
+
+```{r}
+116.652 - 98.017 #chi-sq value
+1 - pchisq(18.635, 2) #p-value
+```
+
+The difference of two deviances is 19.635, which is following chi-square distribution with df 2 under H0.
+The p-value is very close to 0. We can reject H0 under common significance levels like 0.05 or 0.01.
+Thus this model is statistically significant.
+
+Second, let's see each coefficient.
+Age is not significant, if we consider the z-test.
+However, according to Agresti's book, a wald type test may be problematic 
+for a logistic regression result.
+But this case, the age variable may have little role 
+when we consider the scattorplot in the above EDA procedure.
+So, I think we can exclude the 'age' variable our model.
+
+
+Now, new model is
+Let's set a model about the probability of having malaria using other two variables, 'age' and log transformed 'ab'.
+Now, our model is
+\[logit(P(y_i = 1 | x_{i1}, x_{i2})) = \alpha_0 + \alpha_1 *x_{i}\]
+for i = 1,2,...,100, where
+
+- $y_i$: 1 if i-th sample has malaria, 0 otherwise
+- $x_i$: log transformed antibody level of i-th sample
+
+```{r}
+mal_glm_fit2 <- glm(mal ~ log(ab), data = malaria, family = "binomial")
+summary(mal_glm_fit2)
+```
+
+Using deviance values, let's test new model's significance.
+
+H0 : $\alpha_1 = 0$
+
+H1 : $\alpha_1 \neq 0$
+
+```{r}
+116.652 - 98.968 # chi-square value
+1 - pchisq(17.684, 1) #p-value
+```
+
+The difference of two deviances is 17.684, which is following chi-square distribution with df 1 under H0.
+The p-value is very close to 0. We can reject H0 under common significance levels like 0.05 or 0.01.
+Thus this model is statistically significant, and $\alpha_1$ is not 0.
+
+The estimated $\alpha_1$ is -0.7122.
+If log-transformed antibody level increase 1 unit,
+the odd is multiplied by $e^{-0.7122}$.
+Or equivalently, the odd ratio is
+\[\frac{P(Y=1|X=c+1)/P(Y=0|X=c+1)}{P(Y=1|X=c)/P(Y=0|X=c)} = e^{-0.7122}\]
+
+For example,
+```{r}
+logit_inv <- function(z){
+  return(exp(z) / (1 + exp(z)))
+}
+mal_coeff <- mal_glm_fit2$coefficients
+library(knitr)
+kable(data.frame(log_ab = 0:7, probability = logit_inv(mal_coeff[1] + mal_coeff[2] * (0:7))))
+```
+
+We can draw the fitted curve.
+```{r}
+par(mfrow = c(1, 1))
+plot(jitter(mal, 0.15) ~ log(ab), pch = 19, data = malaria,
+  xlim = c(-1, 10), ylab = "malaria", xlab="log(antibody level)")
+curve(logit_inv(mal_coeff[1] + mal_coeff[2] * x), add = TRUE, col = "red")
+```
+
+Let's evaluate this fitting result.
+
+```{r}
+mal_pred_prob <- predict(mal_glm_fit2, data.frame(ab = malaria$ab), type = "response")
+mal_pred_binary <- ifelse(mal_pred_prob > 0.5, 1, 0)
+sum(malaria$mal == mal_pred_binary)
+sum(malaria$mal == 1 & mal_pred_binary == 1) / sum(malaria$mal == 1) #sensitivity
+sum(malaria$mal == 0 & mal_pred_binary == 0) / sum(malaria$mal == 0) #specificity
+```
+If we choose cutoff point as 0.5, the 72% points are correctly predicted.
+But sensitivity $P(\hat{y}=1 | y=1)$ is low.
+
+```{r}
+par(mfrow = c(1, 1))
+plot(0, 0, type = "n", xlim = c(0, 1), ylim = c(0, 1),
+  xlab = "false positive", ylab = "sensitivity", main="ROC curve")
+abline(0, 1, lty=2)
+
+log_ab_df <- data.frame(ab = malaria$ab)
+
+for(thres in seq(0, 1, by = 0.005)) {
+  mal_pred_prob <- predict(mal_glm_fit2, log_ab_df, type = "response")
+  mal_pred_binary <- ifelse(mal_pred_prob > thres, 1, 0)
+  #data points of malaria data == 100
+  sens_ratio <- sum(malaria$mal == 1 & mal_pred_binary == 1) / sum(malaria$mal == 1)
+  falsepos_ratio <- sum(malaria$mal == 0 & mal_pred_binary == 1) / sum(malaria$mal == 0)
+
+  points(falsepos_ratio, sens_ratio, pch = 19)
+}
+```
+
+The ROC curve seems good.
+Note that I draw this plot by re-using the training dataset.
+I do not seperate a training dataset and a testing dataset.
+This may be a limitation in evaluating predictive powerof this model
+by looking at the above ROC curve.
+However, for now, I skip the cross-validation procedure.
+
+Finally, I attach the diagnostic plots without explanation.
+(Residual analysis for logistic regression models hasn't been covered in class yet.)
+
+```{r}
+par(mfrow = c(2, 2))
+plot(mal_glm_fit2)
+```
