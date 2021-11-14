@@ -37,13 +37,17 @@ par(mfrow = c(1, 1))
 boxplot(times ~ method, data = rounding) #EDA
 ```
 
+Several points are far from the box.
+We may have to be careful that the analysis result is distorted by these points.
+
+
 **Analyze the data assuming a randomized block design with time to round**
 **first base as the response, method of rounding first as the treatment, and**
 **player as the block variable. Plot residuals to check whether the assumptions**
 **for the distribution of random error appear to be valid.**
 
 Let $i=1,2,3$ be indices for methods and $j=1,2,...,22$ be indices for blocks (or, player).
-Note that there is only one data point for each $(i,j)$. So I omit the cell-wise(?) index.
+Note that there is only one data point for each $(i,j)$. So I omit the index within each cell.
 Then, the model becomes
 \[y_{ij} = \mu + \alpha_i + \beta_j + \epsilon_{ij}\]
 where $\alpha_i$ are the effects of 'method', and $\beta_j$ are the block effects.
@@ -68,17 +72,18 @@ H0: all $\beta_i$ are 0. (the block effects are not significant.)
 H1: at least one $\beta_i$ is not 0. (the block effects are significant.)
 
 The anova table shows F values and p-values for each test.
-For the former one, F value is 6.288, and it follows the F-distirbution with degrees of freedom 2 and 42 under H0.
-The p-value is 0.00408, so se can reject the H0 with common significance levels like 0.01 or 0.05.
-Thus, we can say that the method-effects are significant.
 
-For the latter test, we can find that the F value is 26.970 which is pretty high, and under H0 it follows the
-F-distribution with df 21 and 42. The p-value is very close to 0, so we can reject the H0 with ordinary significance level.
-Therefore, we can say that the block effects are also significant.
+For the block effect test, we can find that the F value is 26.970 which is pretty high, and under H0 it follows the
+F-distribution with df 21 and 42. The p-value is very close to 0, so we can reject the H0 with an ordinary significance level.
+Therefore, we can say that the block effects are also significant. So this block term cannot be removed.
+
+Next, for the former one, F value is 6.288, and it follows the F-distribution with degrees of freedom 2 and 42 under H0.
+The p-value is 0.00408, so we can reject the H0 with common significance levels like 0.01 or 0.05.
+Thus, we can say that the method-effects are significant.
 
 Next, let's see the estimated values for the effects of 'methods'.
 (We do not have an interest in interpreting the block effect.)
-The upper table shows the estimated difference between means of each method and grand mean.
+The upper table shows the estimated difference between the mean of each method and the grand mean.
 The lower table is about the mean values themselves.
 
 ```{r}
@@ -86,7 +91,7 @@ model.tables(rounding_aov_fit, cterms = "method")
 model.tables(rounding_aov_fit, cterms = "method", type = "mean")
 ```
 
-To see the aspect of the difference, let's use the tukey's significant difference method.
+To see the aspect of the difference, let's use Tukey's significant difference method.
 
 ```{r}
 rounding_tukeydiff <- TukeyHSD(rounding_aov_fit, which = 1) #only 'method'
@@ -95,7 +100,7 @@ par(mfrow = c(1, 1))
 plot(rounding_tukeydiff)
 ```
 
-'WidAngle' is different significantly from other two methods.
+'WidAngle' is different significantly from the other two methods.
 
 Finally, for model diagnosis, let's draw the residual plot and the normal q-q plot.
 
@@ -104,14 +109,14 @@ par(mfrow = c(2, 2))
 plot(rounding_aov_fit)
 ```
 
-In the residual plot, we can find a point that has high-residual value (7-th).
-Not only that, the residuals have shape like a diamond. 
+In the residual plot, we can find a point that has a high-residual value (7th).
+Not only that, the residuals have a shape like a diamond. 
 So we have to check whether the homogeneous variance assumption is valid or not.
 
-In addition, in the normal q-q plot, tail parts of both two direction are not on a line.
+In addition, in the normal q-q plot, tail parts of both two directions are not on a line.
 It is questionable whether that the normal assumption is satisfied.
-Especially, the 7-th data point is problematic. We need to act on that point.
-
+Especially, the 7th data point is problematic. We need to take action on that.
+(For example, we may discard the point.)
 
 
 ### \noindent Problem2.
@@ -130,6 +135,7 @@ head(morley)
 ```
 
 According to the R help file, three variables are
+
 - Expt: The experiment number, from 1 to 5.
 - Run: The run number within each experiment.
 - Speed: Speed-of-light measurement.
@@ -166,14 +172,15 @@ Let's test whether the measurements of light speed are consistent or not across 
 Because there is another factor, 'run', I will use it as a block.
 
 Let $i=1,...,5$ be indices for the experiments and $j=1,2,...,20$ be indices for the run numbers.
-Again, these dataset has one data point for each $(i,j)$. So it's not needed to use a subscript within each cell.
+This dataset has one data point for each $(i,j)$. So it's not needed to use a subscript within each cell.
 
 Then, the model becomes
 \[y_{ij} = \mu + \alpha_i + \beta_j + \epsilon_{ij}\]
 where $\alpha_i$ are the experiment effects, and $\beta_j$ are the block (run) effects.
 and $\epsilon_{ij}$ are iid, normally distributed errors with mean 0 and common variance $\sigma^2$.
 
-Next, our hypothesis are
+Next, our hypotheses are
+
 H0 : $\alpha_i=0$ for all $i$
 (the measurements of light speed are consistent across the five experiments)
 
@@ -186,22 +193,25 @@ summary(morley_aov_fit)
 ```
 
 The block effects are not significant. So, let's delete the variable. Then,
+
 ```{r}
 morley_aov_fit2 <- aov(Speed ~ Expt, data = morley)
 summary(morley_aov_fit2)
 ```
 
 The F-value is 4.288, and it follows the F distribution with df 4 and 95.
-The p-value is 0.00311, so we can reject H0 under significance level higher than 0.00311, like 0.01 or 0.05.
+The p-value is 0.00311, so we can reject H0 under a significance level higher than 0.00311, like 0.01 or 0.05.
 Thus, we cannot say that the measurements of light speed are not consistent across the five experiments.
 
 Here are differences from grand mean, and mean values of the experiment groups.
+
 ```{r}
 model.tables(morley_aov_fit2, cterms = "Expt")
 model.tables(morley_aov_fit2, cterms = "Expt", type = "mean")
 ```
 
-And, tukey's difference test says that there are differences between experiment 1 and 4, and between 1 and 5.
+And, Tukey's difference test says that there are differences between experiments 1 and 4, and between 1 and 5.
+
 ```{r}
 morley_tukeydiff <- TukeyHSD(morley_aov_fit2, which = 1)
 morley_tukeydiff
@@ -216,7 +226,7 @@ par(mfrow = c(2, 2))
 plot(morley_aov_fit2)
 ```
 
-Except for two or three points that seem outliers, they looks fine.
+Except for two or three points that seem outliers, they look fine.
 We cannot find any pattern from the residual plot, 
 and almost all points are making a line in the q-q plot (if we delete the three points).
 
@@ -234,10 +244,12 @@ head(tb)
 is.factor(tb$animal)
 is.factor(tb$logdose)
 ```
+
 According to the tb.dilute's R help file, 
 this dataset consists of 18 data points, with three variables.
 Each variable is
-- reaction : a numeric vector, reaction sizes (average of diameters) for tuberculin skin pricks.
+
+- reaction: a numeric vector, reaction sizes (average of diameters) for tuberculin skin pricks.
 - animal: a factor with levels 1–6.
 - logdose: a factor with levels 0.5, 0, and -0.5.
 
@@ -264,6 +276,7 @@ Note that we cannot add an interaction term, because there is only one data poin
 for each (i,j)-combination. If we add the term, the degrees of freedom of residual would be 0.
 
 Let's fit the model.
+
 ```{r}
 tb_aov_fit <- aov(reaction ~ animal + logdose, data = tb)
 summary(tb_aov_fit)
@@ -272,25 +285,25 @@ summary(tb_aov_fit)
 To check whether each effect is significant or not, we can do tests.
 Specifically, for $\alpha_i$,
 
-H0: all $\alpha_i$ are 0. (There is no effect of animal factor on average.)
+H0: all $\alpha_i$ are 0. (There is no effect of the animal factor on average.)
 
-H1: there is at least different $\alpha_i$. (The effect of animal factor is significant on average.)
+H1: there is at least different $\alpha_i$. (The effect of the animal factor is significant on average.)
 
 and for $\beta_j$,
 
-H0: all $\beta_j$ are 0. (There is no effect of logdose factor on average.)
+H0: all $\beta_j$ are 0. (There is no effect of the logdose factor on average.)
 
-H1: there is at least different $\beta_j$. (The effect of logdose factor is significant on average.)
+H1: there is at least different $\beta_j$. (The effect of the logdose factor is significant on average.)
 
 Let's see the above anova table that R gives to us
-The F-value of the first test is 8.264, which following the F-distribution with df 5 and 10 under H0.
-The p-value is 0.00253, so we can reject the H0 with significance level larger than 0.00253, like 0.05 or 0.01.
-Thus, we can say that the effect of animal factor is significant.
+The F-value of the first test is 8.264, which follows the F-distribution with df 5 and 10 under H0.
+The p-value is 0.00253, so we can reject the H0 with a significance level larger than 0.00253, like 0.05 or 0.01.
+Thus, we can say that the effect of the animal factor is significant.
 
-Next, in case of the $\beta_j$'s test,
-the F-value is 42.482, which following the F-distribution with df 2 and 10 under H0.
+Next, in the case of the $\beta_j$'s test,
+the F-value is 42.482, which follows the F-distribution with df 2 and 10 under H0.
 The p-value is close to 0, so we can reject the H0 with a common significance level.
-Therefore, we can conclude that the effect of logdose factor is also significant.
+Therefore, we can conclude that the effect of the logdose factor is also significant.
 
 
 Now, using fitted values and Tukey’s multiple comparison method, let's compare group means.
@@ -303,11 +316,12 @@ par(mfrow = c(1, 2))
 plot(tb_tukeydiff, las = 1)
 ```
 
-Three pairs of animal factors (5-1, 6-1, 6-2) are different.
-Not only that, two pairs of logdose factor (between -0.5 and 0.5, and between -0.5 and 0)
+Three pairs of the animal factor (5-1, 6-1, 6-2) are different.
+Not only that, two pairs of the logdose factor (between -0.5 and 0.5, and between -0.5 and 0)
 does not include 0 in their CI.
 
 Finally, here are the residual plot and the normal q-q plot.
+
 ```{r}
 par(mfrow = c(2, 2))
 plot(tb_aov_fit)
@@ -316,12 +330,12 @@ plot(tb_aov_fit)
 In the both plots, we can find two outliers (13th and 14th points).
 Even if we talk except for those two points, there are other problems.
 We can find that a weak U-shape pattern in the residual plot.
-And we can see that data points are not perfectly on the line in the normal q-q plot,
+And we can see that data points are not perfectly on the line in the normal q-q plot.
 
-But depending on point of view, some other researcher may not think
+However, depending on point of view, some other researchers may not think
 that it is terribly problematic except for two outliers.
 The U-shape is very weak, and the data points are 'nearly' linear in the q-q plot.
-It is also known that ANOVA is quite robust!
+It is also known that ANOVA is robust.
 So, I guess someone might say it's okay. It's a bit vague situation.
 
 
@@ -341,11 +355,12 @@ str(vital)
 
 'vitcap2' dataset has 84 data points and 3 variables. Each column is
 
-- group : a numeric vector; group codes are 1: exposed > 10 years, 2: exposed < 10 years, 3: not exposed.
-- age : a numeric vector, age in years.
-- vital.capacity : a numeric vector, vital capacity (a measure of lung volume) (l).
+- group: a numeric vector; group codes are 1: exposed > 10 years, 2: exposed < 10 years, 3: not exposed.
+- age: a numeric vector, age in years.
+- vital.capacity: a numeric vector, vital capacity (a measure of lung volume) (l).
 
-Note that each group has different number of points. In other words, this dataset is imbalanced.
+Note that each group has a different number of points. In other words, this dataset is imbalanced.
+
 ```{r}
 dim(subset(vital, group == 1))
 dim(subset(vital, group == 2))
@@ -354,6 +369,7 @@ dim(subset(vital, group == 3))
 
 
 Let's do EDA seeing some figures.
+
 ```{r}
 par(mfrow = c(1, 2))
 boxplot(vital.capacity ~ group, data = vital)
@@ -372,6 +388,7 @@ Let's consider a model,
 \[y_{ij} = \mu +\alpha_i + (\beta + \gamma_i) x_{ij} + \epsilon\]
 for $i=1,2,3$, $j=1,...,n_i$, $n_1=12, n_2=28, n_3=44$
 where
+
 - $y_{ij}$ : vital capacity of i-th group, j-th subject
 - $\alpha_i$ : i-th group effect
 - $x_{ij}$ : age of i-th group, j-th subject
@@ -379,6 +396,7 @@ where
 and assume that $\epsilon ~ N(0, \sigma^2)$, iid.
 
 Here is the fitting result.
+
 ```{r}
 vital_lm_fit <- lm(vital.capacity ~ group * age, data = vital)
 summary(vital_lm_fit)
@@ -397,27 +415,28 @@ The p-value is very close to 0, so we can reject H0. Thus this model is meaningf
 Next, let's see the anova table.
 First hypotheses are
 
-H0 : all $\gamma_i$ are 0.
+H0: all $\gamma_i$ are 0.
 
-H1 : at least one $\gamma_i$ is not 0.
+H1: at least one $\gamma_i$ is not 0.
 
 The F value of 'group:age' is 3.5402, which follows the F-distribution with df 2, 78 under H0.
-If we use a significance level 0.05, we cannot reject H0. But using 0.01, we can.
+The p-value is 0.03376. If we use a significance level 0.01, we cannot reject H0. But using 0.05, we can.
 
 Next,
 
-H0 : all $\alpha_i$ are 0.
+H0: all $\alpha_i$ are 0.
 
-H1 : at least one $\alpha_i$ is not 0.
+H1: at least one $\alpha_i$ is not 0.
 
 The F value of 'group' is 3.8912, which follows the F-distribution with df 2, 78 under H0.
-Again, if we use a significance level 0.05, we cannot reject the H0. But using 0.01, we can reject it.
+The p-value is 0.02450.
+Again, if we use a significance level 0.05, we can reject the H0. But using 0.01, we cannot reject it.
 
 Finally,
 
-H0 : $\beta = 0$
+H0: $\beta = 0$
 
-H1 : $\beta \neq 0$
+H1: $\beta \neq 0$
 
 The F-value of age is 42.0915, which follows the F-distribution with df 1, 78 under H0.
 The p-value is nearly 0, so we can reject H0.
@@ -447,7 +466,7 @@ abline(vital_coeff[1]+vital_coeff[2], vital_coeff[4]+vital_coeff[5], col = color
 abline(vital_coeff[1]+vital_coeff[3], vital_coeff[4]+vital_coeff[6], col = colors[3])
 ```
 
-Finally, here are the residual plots and the normal q-q plot.
+Finally, here are the residual plot and the normal q-q plot.
 
 ```{r}
 par(mfrow = c(2, 2))
@@ -502,7 +521,7 @@ boxplot(weightloss ~ method + fat, data = wl_data,
   las = 2, cex.axis = 0.8, xlab = "")
 ```
 
-The difference between two methods seems small.
+The difference between the two methods seems small.
 However, in the case of the fat, the level '20%' is very different from the other two levels.
 The box of 20% even does not overlap the other two boxes.
 
@@ -514,8 +533,8 @@ interaction.plot(fat, method, response = weightloss)
 })
 ```
 
-In interaction plots, each lines are not parallel.
-It implies there may be an interaction between 'method' and 'fat'.
+In interaction plots, lines are not parallel.
+It implies there may or may not be an interaction between 'method' and 'fat'.
 
 
 **2. Perform a two-way analysis of variance.**
@@ -534,7 +553,7 @@ where
 - y_{ijk}: amount of weight loss of i-th method(frying, grilling), j-th fat level (10%, 15%, 20%), and k-th observations
 - $\alpha_i$: i-th method effect
 - $\beta_j$: j-th fat level effect
-- $\gamma_{ij}$ : interaction effect between i-th method and j-th fat level
+- $\gamma_{ij}$: interaction effect between i-th method and j-th fat level
 
 and $\epsilon_{ijk}$ are iid normal random variable with mean 0 and variance $\sigma^2$.
 
@@ -543,7 +562,7 @@ wl_aov_fit <- aov(weightloss ~ method * fat, data = wl_data)
 summary(wl_aov_fit)
 ```
 
-First test is for the interaction term.
+The first test is for the interaction term.
 
 H0 : all $\gamma_{ij}$ are 0.
 
@@ -575,7 +594,7 @@ H0: All $\alpha_i$ are 0.
 H1: At least one $\alpha_i$ is 0. (or, $\alpha_2 \neq 0$)
 
 The F-value of the 'method' is 3.247, which follows the F-distribution with df 1 and 26.
-The p-value is 0.0832, so we cannot reject H0 under common significance level like 0.05 or 0.01.
+The p-value is 0.0832, so we cannot reject H0 under a common significance level like 0.05 or 0.01.
 In other words, we cannot conclude that there is a difference between two cooking methods.
 
 Second Hypotheses are
@@ -589,19 +608,19 @@ The p-value is so close to 0, so we can reject the H0.
 This means that there is a significant difference on the amount of weight loss among fat levels.
 
 
-Next, next table show fitted mean differences from grand mean by each level of fat.
+Next, the next table shows fitted mean differences from the grand mean by each level of fat.
 
 ```{r}
 model.tables(wl_aov_fit2, cterms = "fat")
 ```
 
-And, this table show the mean values for each level of fat.
+And, this table shows the mean values for each level of fat.
 
 ```{r}
 model.tables(wl_aov_fit2, cterms = "fat", type = "mean")
 ```
 
-To see how they are differ, I will use the tukey's significant difference method.
+To see how they differ, I will use Tukey's significant difference method.
 Following the problem's direction, I use 90% confidence level for this work.
 
 ```{r}
@@ -611,11 +630,12 @@ par(mfrow = c(1, 1))
 plot(wl_tukeydiff)
 ```
 
-From this R output, we can see the 90% confidence interval for the mean difference in weight among three fat level.
+From this R output, we can see the 90% confidence interval for the mean difference 
+in weight among three fat levels.
 Between the fat levels 10% and 20%, and between the levels 15% group and 20% group,
-we can find significant differences on their average.
+we can find significant differences in their average.
 
-In addition, here are 90% CIs between two coocking methods, which are requested in the problem.
+In addition, here are 90% CIs between two cooking methods, which are requested in the problem.
 
 ```{r}
 wl_tukeydiff2 <- TukeyHSD(wl_aov_fit2, which = 1, conf = 0.9) #for method
@@ -626,9 +646,9 @@ plot(wl_tukeydiff2)
 
 This 90% CI does not include zero.
 This is a consistent result because the p-value of the F test about 'method' is 0.070.
-Under significance level 0.1, we cannot reject H0.
+Under significance level 0.1, we can reject H0.
 (Note that the tests described in the previous paragraph used different significance levels, 0.05 or 0.01,
-so I rejected H0.)
+so I could not reject H0.)
 
 Finally, for model diagnosis, let's draw the residual plot and the normal q-q plot.
 
@@ -652,7 +672,8 @@ str(malaria)
 # ?malaria
 summary(malaria)
 ```
-There are 100 data points, and 4 variables.
+
+There are 100 data points and 4 variables.
 Each variable is
 
 - subject: subject code.
@@ -685,12 +706,12 @@ Note that there is no explanatory variable of complete separation.
 
 Let's set a model about the probability of having malaria using other two variables, 'age' and log transformed 'ab'.
 Now, our model is
-\[logit(P(y_i = 1 | x_{i1}, x_{i2})) = \beta_0 + \beta_1 x_{i1} + \beta_2 *x_{i2}\]
+\[logit(P(y_i = 1 | x_{i1}, x_{i2})) = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2}\]
 for i = 1,2,...,100, where
 
 - $y_i$: 1 if i-th sample has malaria, 0 otherwise
-- $x_i1$: age of i-th sample
-- $x_i2$: log transformed antibody level of i-th sample
+- $x_{i1}$: age of i-th sample
+- $x_{i2}$: log transformed antibody level of i-th sample
 
 ```{r}
 mal_glm_fit <- glm(mal ~ age + log(ab), data = malaria, family = "binomial")
@@ -708,23 +729,23 @@ H1 : at least one $\beta_j$ ($j=1,2$) is not 0.
 1 - pchisq(18.635, 2) #p-value
 ```
 
-The difference of two deviances is 19.635, which is following chi-square distribution with df 2 under H0.
+The difference of the two deviances is 19.635, which is following the chi-square distribution with df 2 under H0.
 The p-value is very close to 0. We can reject H0 under common significance levels like 0.05 or 0.01.
 Thus this model is statistically significant.
 
 Second, let's see each coefficient.
 Age is not significant, if we consider the z-test.
-However, according to Agresti's book, a wald type test may be problematic 
+Note that according to Agresti's book, a wald type test may be problematic
 for a logistic regression result.
 But this case, the age variable may have little role 
-when we consider the scattorplot in the above EDA procedure.
-So, I think we can exclude the 'age' variable our model.
+when we consider the scatterplot in the above EDA procedure.
+So, I think we can exclude the 'age' variable in our model.
 
 
-Now, new model is
-Let's set a model about the probability of having malaria using other two variables, 'age' and log transformed 'ab'.
+Let's set another model about the probability of having malaria using only one variable,
+log-transformed 'ab'.
 Now, our model is
-\[logit(P(y_i = 1 | x_{i1}, x_{i2})) = \alpha_0 + \alpha_1 *x_{i}\]
+\[logit(P(y_i = 1 | x_{i1}, x_{i2})) = \alpha_0 + \alpha_1 x_{i}\]
 for i = 1,2,...,100, where
 
 - $y_i$: 1 if i-th sample has malaria, 0 otherwise
@@ -735,7 +756,7 @@ mal_glm_fit2 <- glm(mal ~ log(ab), data = malaria, family = "binomial")
 summary(mal_glm_fit2)
 ```
 
-Using deviance values, let's test new model's significance.
+Using deviance values, let's test the new model's significance.
 
 H0 : $\alpha_1 = 0$
 
@@ -746,7 +767,7 @@ H1 : $\alpha_1 \neq 0$
 1 - pchisq(17.684, 1) #p-value
 ```
 
-The difference of two deviances is 17.684, which is following chi-square distribution with df 1 under H0.
+The difference between the two deviances is 17.684, which is following the chi-square distribution with df 1 under H0.
 The p-value is very close to 0. We can reject H0 under common significance levels like 0.05 or 0.01.
 Thus this model is statistically significant, and $\alpha_1$ is not 0.
 
@@ -767,6 +788,7 @@ kable(data.frame(log_ab = 0:7, probability = logit_inv(mal_coeff[1] + mal_coeff[
 ```
 
 We can draw the fitted curve.
+
 ```{r}
 par(mfrow = c(1, 1))
 plot(jitter(mal, 0.15) ~ log(ab), pch = 19, data = malaria,
@@ -783,7 +805,7 @@ sum(malaria$mal == mal_pred_binary)
 sum(malaria$mal == 1 & mal_pred_binary == 1) / sum(malaria$mal == 1) #sensitivity
 sum(malaria$mal == 0 & mal_pred_binary == 0) / sum(malaria$mal == 0) #specificity
 ```
-If we choose cutoff point as 0.5, the 72% points are correctly predicted.
+If we choose the cutoff point as 0.5, the 72% points are correctly predicted.
 But sensitivity $P(\hat{y}=1 | y=1)$ is low.
 
 ```{r}
@@ -806,9 +828,9 @@ for(thres in seq(0, 1, by = 0.005)) {
 ```
 
 The ROC curve seems good.
-Note that I draw this plot by re-using the training dataset.
-I do not seperate a training dataset and a testing dataset.
-This may be a limitation in evaluating predictive powerof this model
+Note that I drew this plot by re-using the training dataset.
+I did not separate a training dataset and a testing dataset.
+This may be a limitation in evaluating the predictive power of this model
 by looking at the above ROC curve.
 However, for now, I skip the cross-validation procedure.
 
