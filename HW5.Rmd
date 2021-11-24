@@ -1,0 +1,371 @@
+---
+title: "Homework Assignment 5"
+author: "Seokjun Choi"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+### \noindent Problem1.
+
+**Fit a logistic regression model to the graft.vs.host data from the ISwR package**
+**predicting gvhd response.**
+**Use different transformations of the index variable.**
+
+```{r}
+library(ISwR)
+gh_data <- graft.vs.host
+# ?graft.vs.host
+
+gh_data$type <- factor(gh_data$type)
+gh_data$preg <- factor(gh_data$preg)
+gh_data$gvhd <- factor(gh_data$gvhd)
+gh_data$dead <- factor(gh_data$dead)
+
+head(gh_data)
+summary(gh_data)
+```
+
+According to the R help file of 'graft.vs.host' data,
+these data are about "Graft versus host disease" and its predictors.
+The dataset consists of 37 subjects, 9 variables (1 response, 1 subject index ('pnr'), 7 predictors).
+Each column means
+
+- pnr: a numeric vector patient number.
+- rcpage: a numeric vector, age of recipient (years).
+- donage: a numeric vector, age of donor (years).
+- type: a numeric vector, type of leukaemia coded 1: AML, 2: ALL, 3: CML for acute myeloid, acute lymphatic, and chronic myeloid leukaemia.
+- preg: a numeric vector code indicating whether donor has been pregnant. 0: no, 1: yes.
+- index: a numeric vector giving an index of mixed epidermal cell-lymphocyte reactions.
+- gvhd: a numeric vector code, graft-versus-host disease, 0: no, 1: yes.
+- time: a numeric vector, follow-up time
+- dead: a numeric vector code, 0: no (censored), 1: yes
+
+Let's do EDA.
+
+```{r}
+names(gh_data)
+
+## put (absolute) correlations on the upper panels,
+## with size proportional to the correlations.
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...){
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+pairs(gh_data[, -1], lower.panel = panel.smooth, upper.panel = panel.cor,
+      gap=0, row1attop=FALSE) #exclude 'pnr'
+```
+
+Two pairs of variables have linear relation. (between 'dead' and 'time', and between 'donage' and 'rcpage'.)
+
+Additionally, Let's look at relationships between 'gvhd' and other variables in detail..
+
+```{r}
+par(mfrow = c(1, 3))
+plot(jitter(as.numeric(gvhd), amount = 0.1) ~ rcpage,
+  data = gh_data, pch = 19, ylab = "gvhd")
+plot(jitter(as.numeric(gvhd), amount = 0.1) ~ donage,
+  data = gh_data, pch = 19, ylab = "gvhd")
+plot(jitter(as.numeric(gvhd), amount = 0.1) ~ time,
+  data = gh_data, pch = 19, ylab = "gvhd")
+plot(gvhd ~ type, data = gh_data)
+plot(gvhd ~ preg, data = gh_data)
+plot(gvhd ~ dead, data = gh_data)
+```
+
+If values of two continuous variables 'rcpage' and 'donage' are higher,
+it seems that the possibility of having graft-versus-host disease tends to increase.
+In the case of another continuous variable 'time', the chance of g-v-h disease seems less
+when the time increase.
+
+And, let's look at the 'index' variable, which is mentioned specifically in the problem.
+To choose good transformation for 'index' variable,
+I draw four figures 
+(with log-transform ($\sim x^0$), square root transform($\sim x^{1/2}$), 
+data without transform($x^1$), and square transform($x^2$).
+
+```{r}
+par(mfrow = c(2, 2))
+plot(jitter(as.numeric(gvhd), amount = 0.1) ~ log(index),
+  data = gh_data, pch = 19, ylab = "gvhd")
+plot(jitter(as.numeric(gvhd), amount = 0.1) ~ sqrt(index),
+  data = gh_data, pch = 19, ylab = "gvhd")
+plot(jitter(as.numeric(gvhd), amount = 0.1) ~ index,
+  data = gh_data, pch = 19, ylab = "gvhd")
+plot(jitter(as.numeric(gvhd), amount = 0.1) ~ (index)^2,
+  data = gh_data, pch = 19, ylab = "gvhd")
+```
+
+Among four cases, the log-transform case seems the best.
+This is because the grid seems to be differentiated better
+according to the log-index value than other case.
+Thus, I choose the log transform as the transform of 'index' variable.
+
+I will exclude all interaction terms.
+This is simply because I want to avoid complex models.
+(I may try to justify this decision more by looking at the EDA results, but I will omit it here.)
+
+Then, our first model is
+
+\[logit(P(y_i = 1 | x_{i1}, x_{i2}, x_{i3}, x_{i4}, x_{i5}, x_{i6}, x_{i7}, x_{i8})) = 
+  \beta_0 + \alpha_1 x_{i1} + \alpha_2 x_{i2} + \alpha_3 x_{i3} + \alpha_4 x_{i4}
+  + \beta_5 x_{i5} + \beta_6 x_{i6} + \beta_7 x_{i7} + \beta_8 log{x_{i8}} \]
+for i = 1,2,...,37, where
+
+- $y_i$: 1 if i-th patient has graft-versus-host disease, 0 otherwise
+- $x_{i1}$: 1 if i-th donor has been pregnant. 0 otherwise
+- $x_{i2}$: i-th patient's leukaemia type of i-th sample. 0 if AML or CML, 1 if ALL.
+- $x_{i3}$: i-th patient's leukaemia type of i-th sample. 0 if AML or ALL, 1 CML.
+- $x_{i4}$: 1 if i-th patient is dead. 0 otherwise (censored)
+- $x_{i5}$: i-th data point's age of recipient (years)
+- $x_{i6}$: i-th data point's age of donor (years).
+- $x_{i7}$: i-th data point's follow up time.
+- $x_{i8}$: i-th data point's index of mixed epidermal cell-lymphocyte reactions
+
+Note that, I used dummy-variable notation since there are too many factor variables.
+(Thus, because 'type' factor has three levels, there are two terms for 'type' variable in this model.)
+
+```{r}
+gh_glm_fit_full <- glm(gvhd ~ type + preg + dead + rcpage + donage + time + log(index),
+  data = gh_data, family = binomial)
+summary(gh_glm_fit_full)
+```
+
+Unfortunately, the numerical algorithm to fit this model failed.
+I cannot be sure the exact reason, but one possible guess is the colinearity between the predictors.
+
+Back to the pair plots in EDA procedure. There is a pair ('time' and 'type') with correlation 0.75.
+Let's take a closer look at the relationship between these two variable.
+
+```{r}
+par(mfrow = c(1, 3))
+plot(gvhd ~ time, data = gh_data)
+plot(gvhd ~ type, data = gh_data)
+plot(time ~ type, data = gh_data)
+```
+
+They are quite strong positive relationship between two predictors,
+but because the shape of each predictor verse 'gvhd' are different, it may cause a problem.
+So, in here, I'll delete 'type' variable. ($\alpha_2 x_{i2}, \alpha_3 x_{i3}$)
+Then our model becomes
+
+
+\[logit(P(y_i = 1 | x_{i1}, x_{i4}, x_{i5}, x_{i6}, x_{i7}, x_{i8})) = 
+  \beta_0 + \alpha_1 x_{i1} +  \alpha_4 x_{i4}
+  + \beta_5 x_{i5} + \beta_6 x_{i6} + \beta_7 x_{i7} + \beta_8 log{x_{i8}} \]
+for i = 1,2,...,37, with the same notation as original model,
+
+
+```{r}
+gh_glm_fit_wo_type <- glm(gvhd ~ preg + dead + rcpage + donage + time + log(index),
+  data = gh_data, family = binomial)
+summary(gh_glm_fit_wo_type)
+```
+
+Fitting is successful. 
+However, there are still so many insignificant variables
+when we think about their t-statistics and p-values.
+But it is also known that a wald-type test is poor in the context of logistic regression.
+Therefore, after I try to delete some variables that have too high p-values as an experiment,
+I will decide whether I include the variable or not in our model using AIC criterion.
+
+
+Here is a result-sequence using a kind of backward selection.
+```{r}
+# after delete preg
+gh_glm_fit_3 <- glm(gvhd ~ dead + rcpage + donage + time + log(index),
+  data = gh_data, family = binomial)
+summary(gh_glm_fit_3)
+
+# after delete rcpage
+gh_glm_fit_4 <- glm(gvhd ~ dead + donage + time + log(index),
+  data = gh_data, family = binomial)
+summary(gh_glm_fit_4)
+
+# after delete dead
+gh_glm_fit_5 <- glm(gvhd ~ donage + time + log(index),
+  data = gh_data, family = binomial)
+summary(gh_glm_fit_5)
+
+# after delete donage
+gh_glm_fit_6 <- glm(gvhd ~ time + log(index),
+  data = gh_data, family = binomial)
+summary(gh_glm_fit_6)
+```
+
+The lower AIC is achieved when we fit the 'gh_glm_fit_4'.
+So, use the model as our final model.
+Then, now our model is
+
+\[logit(P(y_i = 1 | x_{i4}, x_{i6}, x_{i7}, x_{i8})) = 
+  \beta_0 + \alpha_4 x_{i4}
+  + \beta_6 x_{i6} + \beta_7 x_{i7} + \beta_8 log{x_{i8}} \]
+for i = 1,2,...,37, with 
+
+- $y_i$: 1 if i-th patient has graft-versus-host disease, 0 otherwise
+- $x_{i4}$: 1 if i-th patient is dead. 0 otherwise (censored)
+- $x_{i6}$: i-th data point's age of donor (years).
+- $x_{i7}$: i-th data point's follow up time.
+- $x_{i8}$: i-th data point's index of mixed epidermal cell-lymphocyte reactions
+
+and $\alpha_4, \beta_6, \beta_7, \beta_8$ are effects of these variables, respectively.
+The fitting result is,
+
+```{r}
+#same as 'gh_glm_fit_4'
+gh_glm_fit_final <- glm(gvhd ~ dead + donage + time + log(index),
+  data = gh_data, family = binomial)
+summary(gh_glm_fit_final)
+```
+
+To begin with, let's check whether this model is significant or not.
+
+H0 : $\alpha_4 = \beta_6 = \beta_7 = \beta_8$ = 0$
+
+H1 : at least one parameter in H0 is not 0.
+
+Under the H0, the difference between the null-deviance and the residual deviance
+follows the chi-square distribution with degrees of freedom 36-32.
+
+```{r}
+(gh_glm_chi_statistic <- 51.049 - 15.945)
+(gh_glm_chi_p_value <- 1 - pchisq(51.049 - 15.945, 36 - 32))
+```
+
+The test statistic value is 35.104, and the p-value of this test is very close to 0.
+So under common significance levels like 0.05 or 0.01, we can reject H0.
+Thus, this model is statistically significant.
+
+Next, let's look at the each coefficient.
+When the patient is not dead,
+\[\frac{P(y_i = 1 | x_{i4}=0, x_{i6}, x_{i7}, x_{i8})}
+    {P(y_i = 0 | x_{i4}=0, x_{i6}, x_{i7}, x_{i8})} = 
+  exp(-0.68 + 0.21 x_{i6} - 0.01 x_{i7} + 5.08 log{x_{i8}})\]
+
+Otherwise, if the patient is dead,
+\[\frac{P(y_i = 1 | x_{i4}=1, x_{i6}, x_{i7}, x_{i8})}
+    {P(y_i = 0 | x_{i4}=1, x_{i6}, x_{i7}, x_{i8})} = 
+  exp(-0.68 + 0.21 x_{i6} - 0.01 x_{i7} + 5.08 log{x_{i8}})\]
+
+Each coefficient is interpreted as the (multiplicative) effect to the odds by one-unit increased predictor.
+For example, if log-transformed index increase 1 unit and other variables stay same value,
+the odd is multiplied by $e^{5.08}$.
+Or equivalently, the odd ratio is
+\[\frac{P(Y=1|log{x_8}=c+1)/P(Y=0|log{x_8}=c+1)}{P(Y=1|log{x_8}=c)/P(Y=0|log{x_8}=c)} = e^{5.08}\]
+for any $c>0$ and under other variables are fixed.
+
+
+Let's evaluate this fitting result.
+
+```{r}
+gh_predict_dataframe <- gh_data[, c("dead", "donage", "time", "index")]
+gh_pred_prob <- predict(gh_glm_fit_final, gh_predict_dataframe, type = "response")
+gh_pred_binary <- ifelse(gh_pred_prob > 0.5, 1, 0)
+sum(gh_data$gvhd == gh_pred_binary)
+sum(gh_data$gvhd == 1 & gh_pred_binary == 1) / sum(gh_data$gvhd == 1) #sensitivity
+sum(gh_data$gvhd == 0 & gh_pred_binary == 0) / sum(gh_data$gvhd == 0) #specificity
+```
+
+If we choose the cutoff point as 0.5, 33 cases among 37 case (89%) are correctly predicted.
+The sensitivity and the specificity are 0.88 and 0.9, respectively,
+which are very high.
+
+
+```{r}
+par(mfrow = c(1, 1))
+plot(0, 0, type = "n", xlim = c(0, 1), ylim = c(0, 1),
+  xlab = "false positive", ylab = "sensitivity", main="ROC curve")
+abline(0, 1, lty=2)
+
+gh_predict_dataframe <- gh_data[, c("dead", "donage", "time", "index")]
+
+for(thres in seq(0, 1, by = 0.005)) {
+  gh_pred_prob <- predict(gh_glm_fit_final, gh_predict_dataframe, type = "response")
+  gh_pred_binary <- ifelse(gh_pred_prob > thres, 1, 0)
+  #data points of malaria data == 100
+  sens_ratio <- sum(gh_data$gvhd == 1 & gh_pred_binary == 1) / sum(gh_data$gvhd == 1)
+  falsepos_ratio <- sum(gh_data$gvhd == 0 & gh_pred_binary == 1) / sum(gh_data$gvhd == 0)
+
+  points(falsepos_ratio, sens_ratio, pch = 19)
+}
+```
+
+The ROC curve seems very good.
+Note that I drew this plot by re-using the training dataset (not test dataset).
+This may be a limitation in evaluating the predictive power of this model
+by looking at the above ROC curve.
+
+
+Finally, here are the residual plots.
+
+```{r}
+gh_pearson_res <- residuals(gh_glm_fit_final, type = "pearson")
+gh_standardized_res <- rstandard(gh_glm_fit_final)
+gh_student_res <- rstudent(gh_glm_fit_final)
+gh_dev_res <- residuals(gh_glm_fit_final, type = "deviance")
+
+res_plot_func <- function(res, main){
+  par(mfrow = c(2, 2))
+  plot(gh_data$donage, res, main = main); abline(h = 0)
+  plot(gh_data$time, res); abline(h = 0)
+  plot(gh_data$index, res); abline(h = 0)
+  plot(gh_pred_prob, res, main = "(verse fitted probability)"); abline(h = 0)
+}
+res_plot_func(gh_pearson_res, main = "pearson residual")
+res_plot_func(gh_standardized_res, main = "standardized residual")
+res_plot_func(gh_student_res, main = "jacknife residual")
+res_plot_func(gh_dev_res, main = "deviance residual")
+```
+
+It is a little strange when drawn with fitted probability, 
+but it seems inevitable due to the nature of logistic regression.
+Everything else seems fine.
+
+
+
+### \noindent Problem2.
+
+Do the problem below from James et al. (Problem 4.10 (a)-(d)):
+
+This question should be answered using the Weekly data set, which is part of the ISLR package. 
+This data is similar in nature to the Smarket data from this chapter’s lab, 
+except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.
+
+(a)  Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?
+
+(b)  Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?
+
+(c)  Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.
+
+(d)  Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
+
+
+
+### \noindent Problem3.
+
+
+Do the problem below from James et al. (Problem 4.11: (a), (b), (c) (explain how you partitioned the data) and (f)):
+In this problem, you will develop a model to predict whether a given car gets high or low gas mileage based on the Auto data set.
+
+(a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, 
+and a 0 if mpg contains a value below its median. 
+You can compute the median using the median() function. N
+ote you may find it helpful to use the data.frame() function to create a single data set 
+containing both mpg01 and the other Auto variables.
+
+(b) Explore the data graphically in order to investigate the association between mpg01 and the other features. 
+Which of the other features seem most likely to be useful in predicting mpg01? 
+Scatterplots and boxplots may be useful tools to answer this question. Describe your findings.
+
+(c) Split the data into a training set and a test set.
+
+(f) Perform logistic regression on the training data in order to predict mpg01 using the variables 
+that seemed most associated with mpg01 in (b). What is the test error of the model obtained?
+
