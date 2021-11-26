@@ -263,6 +263,10 @@ for any $c>0$ and under other variables are fixed.
 
 
 Let's evaluate this fitting result.
+A better model evaluation would have been possible if I devided the training and testing data from the beginning, 
+but **I will omit it here**.
+In the analysis below, the evaluation using prediction is only an evaluation of the training error, 
+so there is a limit.
 
 ```{r}
 gh_predict_dataframe <- gh_data[, c("dead", "donage", "time", "index")]
@@ -332,32 +336,248 @@ Everything else seems fine.
 
 ### \noindent Problem2.
 
-Do the problem below from James et al. (Problem 4.10 (a)-(d)):
+**Do the problem below from James et al. (Problem 4.10 (a)-(d)):**
 
-This question should be answered using the Weekly data set, which is part of the ISLR package. 
-This data is similar in nature to the Smarket data from this chapter’s lab, 
-except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.
+**This question should be answered using the Weekly data set, which is part of the ISLR package.**
+**This data is similar in nature to the Smarket data from this chapter’s lab,**
+**except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.**
 
-(a)  Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?
+```{r}
+library(ISLR)
+# ?Weekly
+head(Weekly)
+is.factor(Weekly$Direction)
+```
 
-(b)  Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?
+According to the R help file, 
+The 'Weekly' dataset is about Weekly percentage returns for the S&P 500 stock index between 1990 and 2010.
+The number of observation is 1089, and there are 9 variables.
 
-(c)  Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.
+- Year: The year that the observation was recorded
+- Lag1: Percentage return for previous week
+- Lag2: Percentage return for 2 weeks previous
+- Lag3: Percentage return for 3 weeks previous
+- Lag4: Percentage return for 4 weeks previous
+- Lag5: Percentage return for 5 weeks previous
+- Volume: Volume of shares traded (average number of daily shares traded in billions)
+- Today: Percentage return for this week
+- Direction: A factor with levels Down and Up indicating whether the market had a positive or negative return on a given week
 
-(d)  Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
+**(a)  Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?**
+
+```{r}
+summary(Weekly)
+```
+
+Interestingly, the summary statistic of all Lag variables are very similar.
+Presumably, during that time period, the S&P market didn't see huge weekly price movements.
+Alternatively, this data may have been normalized, 
+but according to the data description, it seems more likely that it is not.
+
+
+```{r}
+pairs(Weekly)
+```
+
+Between each Lag variable, it looks as if the data is clustered in a circle.
+When you look at the year and each lag, it looks like a horizontal line simply because the points are placed around 0.
+Year and volume look like a quadratic or exponential curve.
+
+Next, let's look at the relationship in detail between 'Direction' and other variables.
+
+```{r}
+par(mfrow = c(2, 4))
+plot(Direction~ Year, data = Weekly, pch = 19)
+plot(jitter(as.numeric(Direction), 0.8) ~ Lag1, data = Weekly, pch = 19)
+plot(jitter(as.numeric(Direction), 0.8) ~ Lag2, data = Weekly, pch = 19)
+plot(jitter(as.numeric(Direction), 0.8) ~ Lag3, data = Weekly, pch = 19)
+plot(jitter(as.numeric(Direction), 0.8) ~ Lag4, data = Weekly, pch = 19)
+plot(jitter(as.numeric(Direction), 0.8) ~ Lag5, data = Weekly, pch = 19)
+plot(jitter(as.numeric(Direction), 0.8) ~ Volume, data = Weekly, pch = 19)
+plot(jitter(as.numeric(Direction), 0.8) ~ Today, data = Weekly, pch = 19)
+```
+
+Unfortunately, to the eye, except for the 'Today' variable, 
+the rest variables do not seem to have a significant relationship with 'direction'.
+In the case of 'today' variable, it seems to separate the 'direction' value perfectly.
+
+
+
+**(b)  Use the full data set to perform a logistic regression with Direction as the response**
+**and the five lag variables plus Volume as predictors.**
+**Use the summary function to print the results.**
+**Do any of the predictors appear to be statistically significant? If so, which ones?**
+
+Now, our model is
+
+\[log{\frac{P(y_i = 1|x_{1i}, x_{2i}, x_{3i}, x_{4i}, x_{5i}, x_{6i})}{P(y_i = 0|x_{1i}, x_{2i}, x_{3i}, x_{4i}, x_{5i}, x_{6i})}}
+= \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + \beta3 x_{3i} + \beta4 x_{4i} + \beta5 x_{5i} + \beta6 x_{6i}\]
+for $i = 1, 2, ..., 1089$, where
+
+where
+
+- $x_{hi}$, "Lag'h'" value of the i-th observation, for $h=1,2,3,4,5$
+- $x_{6i}$, 'Volume' value of the i-th observation
+- $y_i$: 'direction' value of the i-th observation
+
+```{r}
+weekly_glm_fit_full <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,
+  data = Weekly, family = "binomial")
+summary(weekly_glm_fit_full)
+```
+
+Under the significance level 0.05, only the 'Lag2' is significant.
+If we use other significance levels less than 0.0206, all variables are not significant.
+
+
+Note that, if we do the chi-square test using the difference of deviances,
+
+H0 : $\beta_1 = \beta_2 = \beta_3 = \beta_4 = \beta_5 = \beta_6 = 0$
+
+H1 : at least one parameter in H0 is not 0.
+
+The test statistic is $\chi^2 = 1496.2 - 1486.4 = 9.8$ and follows the chi-square distribution with df $1088-1082 = 6$,
+so 
+```{r}
+1 - pchisq(1496.2 - 1486.4, 1088 - 1082)
+```
+the p-value is 0.13333.
+Thus, we cannot reject the H0 under common significance levels like 0.05 or 0.01,
+and we conclude that this model is not statistically significant.
+So even if the 'Lag2' variable is significant in individual tests, it may be meaningless.
+
+
+
+**(c)  Compute the confusion matrix and overall fraction of correct predictions.**
+**Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.**
+
+Let's make the confusion matrix. To find the best cutoff value, 
+I calculate the numbers of correct prediction from 0 to 1 by 0.01.
+After that, I show the confusion matrix at the cutoff values ​​that maximize the most accurate predictions.
+
+```{r}
+weekly_glm_fit_full_prob <- predict(weekly_glm_fit_full, type = "response")
+
+best_score <- 0
+best_cutoff <- 0
+for(i in seq(0, 1, by = 0.01)){
+  weekly_glm_fit_full_pred <- ifelse(weekly_glm_fit_full_prob > i, "Up", "Down")
+  score <- sum(weekly_glm_fit_full_pred == Weekly$Direction)
+  if(score > best_score) {
+    best_cutoff <- i
+    best_score <- score
+  }
+}
+weekly_glm_fit_full_pred <- ifelse(weekly_glm_fit_full_prob > best_cutoff, "Up", "Down")
+weekly_glm_fit_full_confusion_table <- table(
+    pred = weekly_glm_fit_full_pred, true = Weekly$Direction)
+cat("best_cutoff:", best_cutoff, "\n")
+weekly_glm_fit_full_confusion_table
+```
+
+The best cutoff value is 0.49. 
+The diagonal elements are correct predictions, and off-diagnoal elements are incorrect predictions.
+So, here, only $575 + 40 = 615$ cases are correctly predicted among 1089 cases.
+If we calculate the accuracy ratio, is about 56.47%, which is too low.
+Even under the best threshold, and even if this is not a 'testing error' but 'training error',
+this model is poor to predict 'down' correctly.
+
+From this result, we can conclude that this model is of little value.
+It's better to set a new model.
+
+Not only that, for better prediction performance testing,
+it is also a good idea to split the training and testing data.
+
+
+
+**(d)  Now fit the logistic regression model using a training data period from 1990 to 2008,**
+**with Lag2 as the only predictor.**
+**Compute the confusion matrix and the overall fraction of correct predictions for the held out data**
+**(that is, the data from 2009 and 2010).**
+
+Under the same notation above, our model is
+
+\[log{\frac{P(y_i = 1|x_{2i})}{P(y_i = 0|x_{2i})}}
+= \beta_0 + \beta_2 x_{2i}\]
+for $i = 1, 2, ..., 1089$
+
+Let's fit this new model after splitting the dataset to training data and testing data.
+Now, the number of observations are 985 in the training dataset,
+and 104 in the testing dataset.
+
+```{r}
+head(Weekly)
+Weekly_train <- subset(Weekly, Year <= 2008)
+Weekly_test <- subset(Weekly, Year >= 2009)
+
+weekly_glm_fit_lag2 <- glm(
+  Direction ~ Lag2, data = Weekly_train, family = "binomial")
+summary(weekly_glm_fit_lag2)
+```
+
+Using the difference of two deviances, we can test 
+
+H0: $\beta_2 = 0$
+
+H1: $\beta_2 \neq 0$
+
+The test statistic is $\chi^2 = 1354.7 - 1350.5 = 4.2$, and under H0, $\chi^2$ follows the chi-square distribution with df 1.
+
+
+```{r}
+1 - pchisq(1354.7 - 1350.5, 1)
+```
+
+The p-value is 0.0404, so we can reject the H0 under the significance level 0.05.
+(but we cannot reject the H0 if we use the level 0.01.)
+
+Note that In the R output, the result of wald-type test (t-test) also shows that the 'Lag2' variable is significant
+under the significance level 0.05.
+
+
+Let's make the confusion table using the testing dataset.
+
+```{r}
+weekly_glm_fit_lag2_prob <- predict(weekly_glm_fit_lag2, Weekly_test, type = "response")
+
+best_score <- 0
+best_cutoff <- 0
+for(i in seq(0, 1, by = 0.01)){
+  weekly_glm_fit_lag2_pred <- ifelse(weekly_glm_fit_lag2_prob > i, "Up", "Down")
+  score <- sum(weekly_glm_fit_lag2_pred == Weekly_test$Direction)
+  if(score > best_score) {
+    best_cutoff <- i
+    best_score <- score
+  }
+}
+weekly_glm_fit_lag2_pred <- ifelse(weekly_glm_fit_lag2_prob > best_cutoff, "Up", "Down")
+weekly_glm_fit_lag2_confusion_table <- table(
+    pred = weekly_glm_fit_lag2_pred, true = Weekly_test$Direction)
+cat("best_cutoff:", best_cutoff, "\n")
+weekly_glm_fit_lag2_confusion_table
+```
+
+Coincidentally, the best cutoff point is 0.49 again.
+Among 104 points of the testing dataset, $7 + 58 = 65$ cases (62.5%) are correctly predicted.
+It's not very satisfactory, but the existing model has been improved.
+
+We can additionally try to draw ROC plot or do residual analysis, but I will omit them here
+since they were not asked in the question.
 
 
 
 ### \noindent Problem3.
 
+**Do the problem below from James et al. Problem 4.11: (a), (b), (c) (explain how you partitioned the data) and (f)):**
 
-Do the problem below from James et al. (Problem 4.11: (a), (b), (c) (explain how you partitioned the data) and (f)):
-In this problem, you will develop a model to predict whether a given car gets high or low gas mileage based on the Auto data set.
+In this problem, you will develop a model to predict whether a given car gets high or low gas mileage 
+based on the Auto data set.
 
 (a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, 
 and a 0 if mpg contains a value below its median. 
-You can compute the median using the median() function. N
-ote you may find it helpful to use the data.frame() function to create a single data set 
+You can compute the median using the median() function.
+Note you may find it helpful to use the data.frame() function to create a single data set 
 containing both mpg01 and the other Auto variables.
 
 (b) Explore the data graphically in order to investigate the association between mpg01 and the other features. 
