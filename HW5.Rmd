@@ -133,7 +133,8 @@ Note that, I used dummy-variable notation since there are too many factor variab
 (Thus, because 'type' factor has three levels, there are two terms for 'type' variable in this model.)
 
 ```{r}
-gh_glm_fit_full <- glm(gvhd ~ type + preg + dead + rcpage + donage + time + log(index),
+gh_glm_fit_full <- glm(
+  gvhd ~ type + preg + dead + rcpage + donage + time + log(index),
   data = gh_data, family = binomial)
 summary(gh_glm_fit_full)
 ```
@@ -164,7 +165,8 @@ for i = 1,2,...,37, with the same notation as original model,
 
 
 ```{r}
-gh_glm_fit_wo_type <- glm(gvhd ~ preg + dead + rcpage + donage + time + log(index),
+gh_glm_fit_wo_type <- glm(
+  gvhd ~ preg + dead + rcpage + donage + time + log(index),
   data = gh_data, family = binomial)
 summary(gh_glm_fit_wo_type)
 ```
@@ -263,7 +265,7 @@ for any $c>0$ and under other variables are fixed.
 
 
 Let's evaluate this fitting result.
-A better model evaluation would have been possible if I devided the training and testing data from the beginning, 
+A better model evaluation would have been possible if I devided the training and test data from the beginning, 
 but **I will omit it here**.
 In the analysis below, the evaluation using prediction is only an evaluation of the training error, 
 so there is a limit.
@@ -480,14 +482,14 @@ The best cutoff value is 0.49.
 The diagonal elements are correct predictions, and off-diagnoal elements are incorrect predictions.
 So, here, only $575 + 40 = 615$ cases are correctly predicted among 1089 cases.
 If we calculate the accuracy ratio, is about 56.47%, which is too low.
-Even under the best threshold, and even if this is not a 'testing error' but 'training error',
+Even under the best threshold, and even if this is not a 'test error' but 'training error',
 this model is poor to predict 'down' correctly.
 
 From this result, we can conclude that this model is of little value.
 It's better to set a new model.
 
 Not only that, for better prediction performance testing,
-it is also a good idea to split the training and testing data.
+it is also a good idea to split the training and test set.
 
 
 
@@ -502,9 +504,9 @@ Under the same notation above, our model is
 = \beta_0 + \beta_2 x_{2i}\]
 for $i = 1, 2, ..., 1089$
 
-Let's fit this new model after splitting the dataset to training data and testing data.
+Let's fit this new model after splitting the dataset to training data and test data.
 Now, the number of observations are 985 in the training dataset,
-and 104 in the testing dataset.
+and 104 in the test dataset.
 
 ```{r}
 head(Weekly)
@@ -536,7 +538,7 @@ Note that In the R output, the result of wald-type test (t-test) also shows that
 under the significance level 0.05.
 
 
-Let's make the confusion table using the testing dataset.
+Let's make the confusion table using the test dataset.
 
 ```{r}
 weekly_glm_fit_lag2_prob <- predict(weekly_glm_fit_lag2, Weekly_test, type = "response")
@@ -559,7 +561,7 @@ weekly_glm_fit_lag2_confusion_table
 ```
 
 Coincidentally, the best cutoff point is 0.49 again.
-Among 104 points of the testing dataset, $7 + 58 = 65$ cases (62.5%) are correctly predicted.
+Among 104 points of the test dataset, $7 + 58 = 65$ cases (62.5%) are correctly predicted.
 It's not very satisfactory, but the existing model has been improved.
 
 We can additionally try to draw ROC plot or do residual analysis, but I will omit them here
@@ -571,21 +573,212 @@ since they were not asked in the question.
 
 **Do the problem below from James et al. Problem 4.11: (a), (b), (c) (explain how you partitioned the data) and (f)):**
 
-In this problem, you will develop a model to predict whether a given car gets high or low gas mileage 
-based on the Auto data set.
+**In this problem, you will develop a model to predict whether a given car gets high or low gas mileage**
+**based on the Auto data set.**
 
-(a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, 
-and a 0 if mpg contains a value below its median. 
-You can compute the median using the median() function.
-Note you may find it helpful to use the data.frame() function to create a single data set 
-containing both mpg01 and the other Auto variables.
+```{r}
+# auto <- read.csv("ItSL-data/Auto.csv")
+library(ISLR)
+?Auto
+auto <- Auto
+auto$origin <- factor(auto$origin)
+head(auto)
+summary(auto)
+```
+The 'Auto.csv' and the 'Auto' dataset in ISLR package are exactly the same.
+In order to get information about the dataset (using '?Auto') and 
+to properly match the data type for each variable, I just use the ISLR package.
+(But I found that the 'origin' is not factor in the ISLR::Auto.
+So I manually cast the variable to the factor.)
 
-(b) Explore the data graphically in order to investigate the association between mpg01 and the other features. 
-Which of the other features seem most likely to be useful in predicting mpg01? 
-Scatterplots and boxplots may be useful tools to answer this question. Describe your findings.
+According to the R help file about 'Auto',
+there are $408 - 16 = 392$ observation (16 are missing), and each variable is
 
-(c) Split the data into a training set and a test set.
+- mpg: miles per gallon
+- cylinders: Number of cylinders between 4 and 8
+- displacement: Engine displacement (cu. inches)
+- horsepower: Engine horsepower
+- weight: Vehicle weight (lbs.)
+- acceleration: Time to accelerate from 0 to 60 mph (sec.)
+- year: Model year (modulo 100)
+- origin: Origin of car (1. American, 2. European, 3. Japanese)
+- name: Vehicle name
 
-(f) Perform logistic regression on the training data in order to predict mpg01 using the variables 
-that seemed most associated with mpg01 in (b). What is the test error of the model obtained?
+Let's do EDA.
 
+```{r}
+pairs(auto[, -9])
+```
+
+Because we will do not use the 'mpg' variable itself but a new binary variable created from the 'mpg',
+I will skip elaborating the relationship between 'mpg' and other variables even if
+we can see that there are interesting relationships.
+
+We can see some linear relationships among 'cylinders', 'displacement', 'horsepower', 'weight', and 'acceleration'.
+If we use a model that can be affected by colinearity, we must be careful.
+
+
+**(a) and (b): Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median,**
+**and a 0 if mpg contains a value below its median.**
+**You can compute the median using the median() function.**
+**Note you may find it helpful to use the data.frame() function to create a single data set**
+**containing both mpg01 and the other Auto variables.**
+
+**Explore the data graphically in order to investigate the association between mpg01 and the other features.**
+**Which of the other features seem most likely to be useful in predicting mpg01?**
+**Scatterplots and boxplots may be useful tools to answer this question. Describe your findings.**
+
+After making the binary variable 'mpg01', let's see some relationship between 'mpg01' and other variables
+by drawing figures.
+
+```{r}
+(mpg_median <- median(auto$mpg))
+auto$mpg01 <- ifelse(auto$mpg > mpg_median, 1, 0)
+```
+```{r}
+par(mfrow = c(3, 3))
+plot(jitter(mpg01, 1) ~ jitter(cylinders, 1), data = auto)
+plot(jitter(mpg01, 1) ~ jitter(displacement, 5), data = auto)
+plot(jitter(mpg01, 1) ~ jitter(horsepower, 1), data = auto)
+plot(jitter(mpg01, 1) ~ weight, data = auto)
+plot(jitter(mpg01, 1) ~ acceleration, data = auto)
+plot(jitter(mpg01, 1) ~ jitter(year, 1), data = auto)
+plot(jitter(mpg01, 1) ~ jitter(as.numeric(origin), 1), data = auto)
+```
+We can find that if one of the cylinder, displacement, horsepower, or weight value increases,
+the value of 'mpg01' tends to be 0.
+And if the accelerate value increase, the value of 'mpg01' is likely to become 1.
+
+Note that these 5 variables show linearity in the EDA procedure above (see pair plot again!).
+First 4 variables are correlated in the same direction, and accelerate is conversly related.
+It seems better to use only one of these variable because of the colinearity if we want to include them.
+Putting several highly correlated variables to our model may make a convergence problem
+for the logistic regression fitting algorithm.
+
+So, we can conclude that it will be useful to use one of these five variable to predict mpg01.
+I think we can get a model with similar performance by choosing any one of the five.
+
+When I see only with my eyes, I think 'cylinders' is the best choice.
+However, I will pick 'weight' because it is continuous variable.
+I think this choice may make interpretation or prediction more interesting.
+
+
+**(c) Split the data into a training set and a test set.**
+
+I will put 40 (about 10%) of data points as a test set.
+After I randomly select a index for the test set using the 'sample' function, let's split the 'Auto' dataset.
+(For reproducibility, I will set the seed value right above the sample function.)
+
+```{r}
+set.seed(20211126)
+test_index <- sort(sample(1:dim(auto)[1], 40))
+train_index <- setdiff(1:dim(auto)[1], test_index)
+
+auto_train <- auto[train_index,]
+auto_test <- auto[test_index, ]
+dim(auto_train)
+dim(auto_test)
+```
+
+Now, the training set consists of 352 data points.
+
+
+**(f) Perform logistic regression on the training data in order to predict mpg01 using the variables**
+**that seemed most associated with mpg01 in (b). What is the test error of the model obtained?**
+
+add model notation 
+
+```{r}
+auto_glm_fit <- glm(mpg01 ~ weight, data = auto_train)
+summary(auto_glm_fit)
+```
+
+Deviance
+```{r}
+87.955 - 38.371
+1 - pchisq(87.955 - 38.371, 1)
+```
+Very good!
+
+coeff intepretation
+
+prob example table
+```{r}
+logit_inv <- function(z){
+  return(exp(z) / (1 + exp(z)))
+}
+
+auto_coeff <- auto_glm_fit$coefficients
+library(knitr)
+kable(data.frame(
+  weight = seq(1000,5000,by=500), 
+  probability = logit_inv(auto_coeff[1] + auto_coeff[2] * seq(1000,5000,by=500))
+  )
+)
+```
+
+We can draw the fitted curve.
+
+```{r}
+par(mfrow = c(1, 1))
+plot(mpg01 ~ weight, pch = 19, data = auto_train,
+  xlim = c(1000, 5500), ylab = "mpg01", xlab = "weight")
+curve(logit_inv(auto_coeff[1] + auto_coeff[2] * x), add = TRUE, col = "red")
+```
+
+
+Evaluation:
+
+```{r}
+
+auto_glm_fit_prob <- predict(auto_glm_fit, auto_test, type = "response")
+
+cutoff_candidates <- seq(0, 1, by = 0.01)
+best_score <- 0
+best_cutoff <- 0
+sens_ratio <- rep(0, length(cutoff_candidates))
+falsepos_ratio <- rep(0, length(cutoff_candidates))
+
+for(i in seq_len(length(cutoff_candidates))) {
+  cutoff_val <- cutoff_candidates[i]
+  auto_glm_pred_binary <- ifelse(auto_glm_fit_prob > cutoff_val, 1, 0)
+  score <- sum(auto_glm_pred_binary == auto_test$mpg01)
+  if(score > best_score) {
+    best_cutoff <- cutoff_val
+    best_score <- score
+  }
+  sens_ratio[i] <- sum(auto_test$mpg01 == 1 & auto_glm_pred_binary == 1) / sum(auto_test$mpg01 == 1)
+  falsepos_ratio[i] <- sum(auto_test$mpg01 == 0 & auto_glm_pred_binary == 1) / sum(auto_test$mpg01 == 0)
+}
+
+auto_glm_pred_binary <- ifelse(auto_glm_fit_prob > best_cutoff, 1, 0)
+auto_glm_confusion_table <- table(
+    pred = auto_glm_pred_binary, true = auto_test$mpg01)
+cat("best_cutoff:", best_cutoff, "\n")
+auto_glm_confusion_table
+
+plot(falsepos_ratio, sens_ratio, 
+  type = "l", main = "ROC curve", 
+  xlim = c(0, 1), ylim = c(0, 1))
+```
+
+
+residual plots for fitted
+
+```{r}
+auto_pearson_res <- residuals(auto_glm_fit, type = "pearson")
+auto_standardized_res <- rstandard(auto_glm_fit)
+auto_student_res <- rstudent(auto_glm_fit)
+auto_dev_res <- residuals(auto_glm_fit, type = "deviance")
+auto_fitted_prob <-logit_inv(auto_coeff[1] + auto_coeff[2] * auto_train$weight)
+
+res_plot_func <- function(res, main){
+  par(mfrow = c(1, 2))
+  plot(auto_train$weight, res); abline(h = 0)
+  plot(auto_fitted_prob, res, main = "(verse fitted probability)"); abline(h = 0)
+}
+res_plot_func(auto_pearson_res, main = "pearson residual")
+res_plot_func(auto_standardized_res, main = "standardized residual")
+res_plot_func(auto_student_res, main = "jacknife residual")
+res_plot_func(auto_dev_res, main = "deviance residual")
+```
