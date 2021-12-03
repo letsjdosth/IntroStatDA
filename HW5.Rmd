@@ -34,18 +34,16 @@ Each column means
 - pnr: a numeric vector patient number.
 - rcpage: a numeric vector, age of recipient (years).
 - donage: a numeric vector, age of the donor (years).
-- type: a numeric vector, type of leukaemia coded 1: AML, 2: ALL, 3: CML for acute myeloid, acute lymphatic, and chronic myeloid leukaemia.
-- preg: a numeric vector code indicating whether donor has been pregnant. 0: no, 1: yes.
+- type: factor, type of leukaemia coded 1: AML, 2: ALL, 3: CML for acute myeloid, acute lymphatic, and chronic myeloid leukaemia.
+- preg: factor, indicating whether donor has been pregnant. 0: no, 1: yes.
 - index: a numeric vector giving an index of mixed epidermal cell-lymphocyte reactions.
-- gvhd: a numeric vector code, graft-versus-host disease, 0: no, 1: yes.
+- gvhd: factor, graft-versus-host disease, 0: no, 1: yes.
 - time: a numeric vector, follow-up time
-- dead: a numeric vector code, 0: no (censored), 1: yes
+- dead: factor, 0: no (censored), 1: yes
 
 Let's do EDA.
 
 ```{r}
-names(gh_data)
-
 ## put (absolute) correlations on the upper panels,
 ## with size proportional to the correlations.
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...){
@@ -66,7 +64,7 @@ Two pairs of variables have linear relations. (between 'dead' and 'time', and be
 
 Additionally, Let's look at relationships between 'gvhd' and other variables in detail.
 
-```{r}
+```{r, fig.height=3}
 par(mfrow = c(1, 3))
 plot(jitter(as.numeric(gvhd), amount = 0.1) ~ rcpage,
   data = gh_data, pch = 19, ylab = "gvhd")
@@ -150,7 +148,7 @@ So, let's go to back to the 'pairs' plot in EDA procedure.
 Let's take a closer look at the relationship between the response variable 'gvhd' and each variable,
 and between these two variable.
 
-```{r}
+```{r, fig.height=3}
 par(mfrow = c(1, 3))
 plot(gvhd ~ time, data = gh_data)
 plot(gvhd ~ type, data = gh_data)
@@ -323,7 +321,7 @@ Finally, here are the residual plots.
 I will draw various kinds of residual plots, 
 with setting the x-axis as not only fitted value but also predictors.
 
-```{r}
+```{r, fig.height=4}
 gh_pearson_res <- residuals(gh_glm_fit_final, type = "pearson")
 gh_standardized_res <- rstandard(gh_glm_fit_final)
 gh_student_res <- rstudent(gh_glm_fit_final)
@@ -365,10 +363,10 @@ is.factor(Weekly$Direction)
 
 According to the R help file, 
 The 'Weekly' dataset is about Weekly percentage returns for the S&P 500 stock index between 1990 and 2010.
-The number of observation is 1089, and there are 9 variables.
+The number of observations is 1089, and there are 9 variables.
 
 - Year: The year that the observation was recorded
-- Lag1: Percentage return for previous week
+- Lag1: Percentage return for the previous week
 - Lag2: Percentage return for 2 weeks previous
 - Lag3: Percentage return for 3 weeks previous
 - Lag4: Percentage return for 4 weeks previous
@@ -383,18 +381,19 @@ The number of observation is 1089, and there are 9 variables.
 summary(Weekly)
 ```
 
-Interestingly, the summary statistic of all Lag variables are very similar.
-Presumably, during that time period, the S&P market didn't see huge weekly price movements.
+Interestingly, the summary statistics of all Lag variables are very similar.
+Presumably, during that time period, the S&P market didn't show huge weekly price movements.
 Alternatively, this data may have been normalized, 
 but according to the data description, it seems more likely that it is not.
 
 
-```{r}
+```{r, fig.height=9}
 pairs(Weekly)
 ```
 
 Between each Lag variable, it looks as if the data is clustered in a circle.
-When you look at the year and each lag, it looks like a horizontal line simply because the points are placed around 0.
+When you look at the year and each lag, it looks like a horizontal line  
+because the points are placed around 0.
 Year and volume look like a quadratic or exponential curve.
 
 Next, let's look at the relationship in detail between 'Direction' and other variables.
@@ -441,34 +440,37 @@ weekly_glm_fit_full <- glm(
 summary(weekly_glm_fit_full)
 ```
 
-Under the significance level 0.05, only the 'Lag2' is significant.
-If we use other significance levels less than 0.0206, all variables are not significant.
+Under the significance level 0.05, only the 'Lag2' is significant (under a wald-type test.)
+But if we use other significance levels less than 0.0206 (for example, 0.01), 
+all variables are not significant.
 
 
-Note that, if we do the chi-square test using the difference of deviances,
+Note that, if we do the chi-square test using the difference of deviances, or specifically
 
 H0 : $\beta_1 = \beta_2 = \beta_3 = \beta_4 = \beta_5 = \beta_6 = 0$
 
 H1 : at least one parameter in H0 is not 0.
 
-The test statistic is $\chi^2 = 1496.2 - 1486.4 = 9.8$ and follows the chi-square distribution with df $1088-1082 = 6$,
-so 
+then the test statistic is $\chi^2 = 1496.2 - 1486.4 = 9.8$ and follows the chi-square distribution with df $1088-1082 = 6$,
+so the p-value is
 ```{r}
 1 - pchisq(1496.2 - 1486.4, 1088 - 1082)
 ```
-the p-value is 0.13333.
-Thus, we cannot reject the H0 under common significance levels like 0.05 or 0.01,
+
+We cannot reject the H0 under typical significance levels like 0.05 or 0.01,
 and we conclude that this model is not statistically significant.
 So even if the 'Lag2' variable is significant in individual tests, it may be meaningless.
 
+As a result, we can say that all predictor's effects are statistically 0.
+For this reason, I will not interpret the coefficients.
 
 
 **(c)  Compute the confusion matrix and overall fraction of correct predictions.**
 **Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.**
 
 Let's make the confusion matrix. To find the best cutoff value, 
-I calculate the numbers of correct prediction from 0 to 1 by 0.01.
-After that, I show the confusion matrix at the cutoff values ​​that maximize the most accurate predictions.
+I calculate the number of correct predictions for each cutoff value from 0 to 1 every 0.01 units.
+After that, I show the confusion matrix at the cutoff values ​​that maximize the number of accurate predictions.
 
 ```{r}
 weekly_glm_fit_full_prob <- predict(weekly_glm_fit_full, type = "response")
@@ -483,6 +485,12 @@ for(i in seq(0, 1, by = 0.01)){
     best_score <- score
   }
 }
+print(best_cutoff)
+```
+
+The best cutoff value is 0.49. 
+
+```{r}
 weekly_glm_fit_full_pred <- ifelse(weekly_glm_fit_full_prob > best_cutoff, "Up", "Down")
 weekly_glm_fit_full_confusion_table <- table(
     pred = weekly_glm_fit_full_pred, true = Weekly$Direction)
@@ -490,19 +498,15 @@ cat("best_cutoff:", best_cutoff, "\n")
 weekly_glm_fit_full_confusion_table
 ```
 
-The best cutoff value is 0.49. 
-The diagonal elements are correct predictions, and off-diagnoal elements are incorrect predictions.
-So, here, only $575 + 40 = 615$ cases are correctly predicted among 1089 cases.
-If we calculate the accuracy ratio, is about 56.47%, which is too low.
-Even under the best threshold, and even if this is not a 'test error' but 'training error',
-this model is poor to predict 'down' correctly.
+The diagonal elements are correct predictions, and off-diagonal elements are incorrect predictions.
+Here, only $575 + 40 = 615$ cases are correctly predicted among 1089 cases.
+If we calculate the accuracy ratio, is about 56.47%, which is too low, even under the best threshold.
+Especially, this model has shown bad performance to predict 'down' correctly.
 
-From this result, we can conclude that this model is of little value.
+Note that this result is from not 'test data' but 'training data.'
+In other words, this model could not even predict properly the data used by its fitting.
+As a result, we can conclude that this model is poor.
 It's better to set a new model.
-
-Not only that, for better prediction performance testing,
-it is also a good idea to split the training and test set.
-
 
 
 **(d)  Now fit the logistic regression model using a training data period from 1990 to 2008,**
@@ -516,9 +520,9 @@ Under the same notation above, our model is
 = \beta_0 + \beta_2 x_{2i}\]
 for $i = 1, 2, ..., 1089$
 
-Let's fit this new model after splitting the dataset to training data and test data.
-Now, the number of observations are 985 in the training dataset,
-and 104 in the test dataset.
+Let's fit this new model after splitting the dataset into training data and test data.
+I split the data as instructed in the problem.
+Now, the observations are 985 in the training dataset and 104 in the test dataset.
 
 ```{r}
 head(Weekly)
@@ -536,18 +540,19 @@ H0: $\beta_2 = 0$
 
 H1: $\beta_2 \neq 0$
 
-The test statistic is $\chi^2 = 1354.7 - 1350.5 = 4.2$, and under H0, $\chi^2$ follows the chi-square distribution with df 1.
+The test statistic is $\chi^2 = 1354.7 - 1350.5 = 4.2$, 
+and under H0, $\chi^2$ follows the chi-square distribution with df 1.
 
 
 ```{r}
 1 - pchisq(1354.7 - 1350.5, 1)
 ```
 
-The p-value is 0.0404, so we can reject the H0 under the significance level 0.05.
-(but we cannot reject the H0 if we use the level 0.01.)
+The p-value is 0.0404, so we can reject the H0 under the significance level of 0.05.
+(but we cannot reject the H0 if we use the level of 0.01.)
 
-Note that In the R output, the result of wald-type test (t-test) also shows that the 'Lag2' variable is significant
-under the significance level 0.05.
+Note that In the R output, the result of a wald-type test (t-test) also shows that the 'Lag2' variable is significant
+under the significance level of 0.05.
 
 
 Let's make the confusion table using the test dataset.
@@ -557,14 +562,27 @@ weekly_glm_fit_lag2_prob <- predict(weekly_glm_fit_lag2, Weekly_test, type = "re
 
 best_score <- 0
 best_cutoff <- 0
-for(i in seq(0, 1, by = 0.01)){
-  weekly_glm_fit_lag2_pred <- ifelse(weekly_glm_fit_lag2_prob > i, "Up", "Down")
+cutoff_candidates <- seq(0, 1, by = 0.01)
+sens_ratio <- rep(0, length(cutoff_candidates))
+falsepos_ratio <- rep(0, length(cutoff_candidates))
+
+for(i in seq_along(cutoff_candidates)) {
+  now_cutoff <- cutoff_candidates[i]
+  weekly_glm_fit_lag2_pred <- ifelse(weekly_glm_fit_lag2_prob > now_cutoff, "Up", "Down")
   score <- sum(weekly_glm_fit_lag2_pred == Weekly_test$Direction)
   if(score > best_score) {
-    best_cutoff <- i
+    best_cutoff <- now_cutoff
     best_score <- score
   }
+  sens_ratio[i] <- sum(Weekly_test$Direction == "Up" & weekly_glm_fit_lag2_pred == "Up") / sum(Weekly_test$Direction == "Up")
+  falsepos_ratio[i] <- sum(Weekly_test$Direction == "Down" & weekly_glm_fit_lag2_pred == "Up") / sum(Weekly_test$Direction == "Down")
 }
+print(best_cutoff)
+```
+
+Coincidentally, the best cutoff point is 0.49 again.
+
+```{r}
 weekly_glm_fit_lag2_pred <- ifelse(weekly_glm_fit_lag2_prob > best_cutoff, "Up", "Down")
 weekly_glm_fit_lag2_confusion_table <- table(
     pred = weekly_glm_fit_lag2_pred, true = Weekly_test$Direction)
@@ -572,12 +590,55 @@ cat("best_cutoff:", best_cutoff, "\n")
 weekly_glm_fit_lag2_confusion_table
 ```
 
-Coincidentally, the best cutoff point is 0.49 again.
 Among 104 points of the test dataset, $7 + 58 = 65$ cases (62.5%) are correctly predicted.
-It's not very satisfactory, but the existing model has been improved.
+It's not satisfactory, but the model has been improved compared to problem (b) and (c).
 
-We can additionally try to draw ROC plot or do residual analysis, but I will omit them here
-since they were not asked in the question.
+
+Additionally, let's try to draw ROC plot using the test set.
+
+```{r}
+par(mfrow = c(1, 1))
+plot(falsepos_ratio, sens_ratio,
+  type = "l", main = "ROC curve",
+  xlim = c(0, 1), ylim = c(0, 1)
+)
+abline(0, 1)
+```
+
+Shockingly, the ROC curve is below the diagonal in some parts!
+In other words, this model sometimes shows worse performance than just completely random prediction
+under some cutoff points.
+
+Finally, here are residual plots.
+
+```{r, fig.height=3.5}
+weekly_pearson_res <- residuals(weekly_glm_fit_lag2, type = "pearson")
+weekly_standardized_res <- rstandard(weekly_glm_fit_lag2)
+weekly_student_res <- rstudent(weekly_glm_fit_lag2)
+weekly_dev_res <- residuals(weekly_glm_fit_lag2, type = "deviance")
+weekly_coeff <- weekly_glm_fit_lag2$coefficients
+
+logit_inv <- function(z){
+  return(exp(z) / (1 + exp(z)))
+}
+
+weekly_fitted_prob <- logit_inv(weekly_coeff[1] + weekly_coeff[2] * Weekly_train$Lag2)
+
+res_plot_func <- function(res, main){
+  par(mfrow = c(1, 2))
+  plot(Weekly_train$Lag2, res, main = main)
+  abline(h = 0)
+  plot(weekly_fitted_prob, res, main = "")
+  abline(h = 0)
+}
+res_plot_func(weekly_pearson_res, main = "pearson residual")
+res_plot_func(weekly_standardized_res, main = "standardized residual")
+res_plot_func(weekly_student_res, main = "jacknife residual")
+res_plot_func(weekly_dev_res, main = "deviance residual")
+```
+
+We can find two lines for each residual plot.
+In logistic regression, I think this pattern is common.
 
 
 
@@ -596,10 +657,11 @@ auto <- Auto
 auto$origin <- factor(auto$origin)
 head(auto)
 ```
+
 The 'Auto.csv' and the 'Auto' dataset in ISLR package are exactly the same.
 In order to get information about the dataset (using '?Auto') and 
 to properly match the data type for each variable, I just use the ISLR package.
-(But I found that the 'origin' is not factor in the ISLR::Auto.
+(But I found that the 'origin' is not a factor in the ISLR::Auto.
 So I manually cast the variable to the factor.)
 
 According to the R help file about 'Auto',
@@ -612,12 +674,12 @@ there are $408 - 16 = 392$ observation (16 are missing), and each variable is
 - weight: Vehicle weight (lbs.)
 - acceleration: Time to accelerate from 0 to 60 mph (sec.)
 - year: Model year (modulo 100)
-- origin: Origin of car (1. American, 2. European, 3. Japanese)
+- origin: Origin of the car (1. American, 2. European, 3. Japanese)
 - name: Vehicle name
 
 Let's do EDA.
 
-```{r}
+```{r, fig.height=8}
 summary(auto)
 pairs(auto[, -9])
 ```
@@ -627,7 +689,7 @@ I will skip elaborating the relationship between 'mpg' and other variables even 
 we can see that there are interesting relationships.
 
 We can see some linear relationships among 'cylinders', 'displacement', 'horsepower', 'weight', and 'acceleration'.
-If we use a model that can be affected by colinearity, we must be careful.
+We must be careful if we use a model that can be affected by colinearity, like logistic regression models.
 
 
 **(a) and (b): Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median,**
@@ -647,7 +709,7 @@ by drawing figures.
 (mpg_median <- median(auto$mpg))
 auto$mpg01 <- ifelse(auto$mpg > mpg_median, 1, 0)
 ```
-```{r}
+```{r, fig.height=8}
 par(mfrow = c(3, 3))
 plot(jitter(mpg01, 1) ~ jitter(cylinders, 1), data = auto)
 plot(jitter(mpg01, 1) ~ jitter(displacement, 5), data = auto)
@@ -657,9 +719,10 @@ plot(jitter(mpg01, 1) ~ acceleration, data = auto)
 plot(jitter(mpg01, 1) ~ jitter(year, 1), data = auto)
 plot(jitter(mpg01, 1) ~ jitter(as.numeric(origin), 1), data = auto)
 ```
-We can find that if one of the cylinder, displacement, horsepower, or weight value increases,
+
+We can find that if one of the 'cylinder', 'displacement', 'horsepower', or 'weight' value increases,
 the value of 'mpg01' tends to be 0.
-And if the accelerate value increase, the value of 'mpg01' is likely to become 1.
+And if the 'accelerate' value increase, the value of 'mpg01' is likely to become 1.
 
 Note that these 5 variables show linearity in the EDA procedure above (see pair plot again!).
 First 4 variables are correlated in the same direction, and accelerate is conversly related.
@@ -667,20 +730,20 @@ It seems better to use only one of these variable because of the colinearity if 
 Putting several highly correlated variables to our model may make a convergence problem
 for the logistic regression fitting algorithm.
 
-So, we can conclude that it will be useful to use one of these five variable to predict mpg01.
-I think we can get a model with similar performance by choosing any one of the five.
+So, we can conclude that it will be useful to use one of these five variables to predict mpg01.
+I think we can get a model with a similar performance by choosing any one of the five.
 
-When I see only with my eyes, I think 'cylinders' is the best choice.
+When I see only with my eyes, I think the 'cylinders' variable is the best choice.
 (Actually, if we pick just one variable with AIC criterion,
 the model 'pmg01~cylinders' gives us the lowest AIC value.)
 However, I will pick 'weight' because it is continuous variable.
-I think this choice may make interpretation or prediction more interesting.
+I expect that this choice may make interpretation or prediction more interesting.
 
 
 **(c) Split the data into a training set and a test set.**
 
 I will put 40 (about 10%) of data points as a test set.
-After I randomly select a index for the test set using the 'sample' function, let's split the 'Auto' dataset.
+After I randomly select an index for the test set using the 'sample' function, let's split the 'Auto' dataset.
 (For reproducibility, I will set the seed value right above the sample function.)
 
 ```{r}
@@ -696,9 +759,10 @@ dim(auto_test)
 ```
 
 Now, the training set consists of 352 data points.
-Let's compare the shapes of each variable in the training and test sets.
+Let's compare the shapes of each variable in the training and test set.
+The left side is the training set, and the right is the test set.
 
-```{r}
+```{r, fig.height=3, echo=FALSE}
 hist_train_vs_test <- function(train_set, test_set, var_name) {
   train_set <- as.numeric(train_set)
   test_set <- as.numeric(test_set)
@@ -751,7 +815,7 @@ auto_glm_fit <- glm(mpg01 ~ weight, data = auto_train)
 summary(auto_glm_fit)
 ```
 
-To test the model significance, calculate the difference between two deviances.
+To test the model significance, I calculate the difference between the two deviances.
 
 H0: $\beta_1 = 0$
 
@@ -764,13 +828,13 @@ H1: $\beta_1 \neq 0$
 
 The test statistic is $\chi^2$ is $87.955 - 38.371 = 49.584$, 
 which follows the chi-square distribution with degrees of freedom 1.
-The p-value is very close to 0, so we can reject H0 with common significance levels like 0.05 or 0.01.
+The p-value is very close to 0, so we can reject H0 with typical significance levels like 0.05 or 0.01.
 Thus, we can conclude that this model is significant.
 
 The above model-significance test is also the test about the coefficient $\beta_1$.
 So, we can say that $\beta_1$ is statistically not 0, or it is significant,
 even if the estimated value of $\beta_1$ is very close to 0.
-In this case, the odds value gets multiplied by $e^{0.0004493}$ as weight increases by one unit.
+In this case, the odds value gets multiplied by $e^{0.0004493}$ as the weight increases by one unit.
 Or, equivalently, the odds ratio is
 
 \[\frac{P(Y=1|log{x}=c+1)/P(Y=0|log{x}=c+1)}{P(Y=1|log{x}=c)/P(Y=0|log{x}=c)} = e^{-0.0004493}\]
@@ -793,7 +857,7 @@ kable(data.frame(
 )
 ```
 
-We can draw the fitted curve on the scatterplot.
+We can also draw the fitted curve on the scatterplot.
 
 ```{r}
 par(mfrow = c(1, 1))
@@ -802,13 +866,13 @@ plot(mpg01 ~ weight, pch = 19, data = auto_train,
 curve(logit_inv(auto_coeff[1] + auto_coeff[2] * x), add = TRUE, col = "red")
 ```
 
-The red line is fitted curve.
+The red line is the fitted curve.
 Contrary to what I expected in the EDA step, the curve is quite gentle.
 This is because the absolute value of the fitted coefficient is very close to 0.
 
 Using the test dataset, let's evaluate this fitted model.
-I will choose the cutoff point by a kind of grid-search (with the grid 0.00, 0.01, 0.02, ... ,1.00).
-Specifically, after calculating each cutoff value how much the model predict correctly,
+I will choose the cutoff point by a kind of grid-search (with the grid 0.00, 0.01, 0.02, ...,1.00).
+Specifically, after calculating each cutoff value how much the model predicts correctly,
 I will use the value that gave us the most correct prediction.
 
 ```{r}
@@ -836,7 +900,7 @@ print(best_cutoff)
 ```
 
 The best cutoff value is 0.62.
-Under this cutoff value,
+Under this cutoff value, I make the confusion table.
 
 ```{r}
 auto_glm_pred_binary <- ifelse(auto_glm_fit_prob > best_cutoff, 1, 0)
@@ -856,11 +920,11 @@ plot(falsepos_ratio, sens_ratio,
 
 It looks very good.
 
-Finally, let's see residual plots for fitted model (of training data).
-Left plots are residual plot with 'weight' on the horizontal axis,
+Finally, let's see residual plots for the fitted model (of training data).
+Left plots are residual plots with 'weight' on the horizontal axis,
 and right plots are with 'fitted probability' on the horizontal axis.
 
-```{r}
+```{r, fig.height=3.5}
 auto_pearson_res <- residuals(auto_glm_fit, type = "pearson")
 auto_standardized_res <- rstandard(auto_glm_fit)
 auto_student_res <- rstudent(auto_glm_fit)
