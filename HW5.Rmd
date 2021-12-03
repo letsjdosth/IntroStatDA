@@ -144,9 +144,9 @@ summary(gh_glm_fit_full)
 
 Unfortunately, the numerical algorithm to fit this model failed.
 I cannot be sure the exact reason, but one possible guess is the colinearity between the predictors.
+After some experiments, I found that convergence fails if 'time', 'type', and 'log(index)' variables are put together in the model.
 
-Let's go to back to the 'pairs' plot in EDA procedure. 
-There is a pair ('time' and 'type') with correlation 0.75.
+So, let's go to back to the 'pairs' plot in EDA procedure. 
 Let's take a closer look at the relationship between the response variable 'gvhd' and each variable,
 and between these two variable.
 
@@ -157,9 +157,9 @@ plot(gvhd ~ type, data = gh_data)
 plot(time ~ type, data = gh_data)
 ```
 
-In the third plot, we can again confirm that there is a strong positive relationship between two predictors.
+In the third plot, we can again confirm that there is a kind of positive relationship between two predictors (even though their correlation value is low).
 However, the patterns in mosaic plots between each predictor and the 'gvhd' are different.
-It is a kind of inconsistency, so it may cause a convergence problem in the numerical method.
+It is a kind of inconsistency, so I guess that it may cause a convergence problem in the numerical method. (I cannot be sure though.)
 So, in here, I'll delete two terms related to the 'type' variable ($\alpha_2 x_{i2} and \alpha_3 x_{i3}$).
 
 Then our model becomes
@@ -225,6 +225,8 @@ for i = 1,2,...,37, with
 - $x_{i8}$: i-th data point's index of mixed epidermal cell-lymphocyte reactions
 
 and $\alpha_4, \beta_6, \beta_7, \beta_8$ are effects of these variables, respectively.
+I will give exact interpretation of these coefficients below.
+
 The fitting result is,
 
 ```{r}
@@ -593,7 +595,6 @@ library(ISLR)
 auto <- Auto
 auto$origin <- factor(auto$origin)
 head(auto)
-summary(auto)
 ```
 The 'Auto.csv' and the 'Auto' dataset in ISLR package are exactly the same.
 In order to get information about the dataset (using '?Auto') and 
@@ -617,6 +618,7 @@ there are $408 - 16 = 392$ observation (16 are missing), and each variable is
 Let's do EDA.
 
 ```{r}
+summary(auto)
 pairs(auto[, -9])
 ```
 
@@ -669,6 +671,8 @@ So, we can conclude that it will be useful to use one of these five variable to 
 I think we can get a model with similar performance by choosing any one of the five.
 
 When I see only with my eyes, I think 'cylinders' is the best choice.
+(Actually, if we pick just one variable with AIC criterion,
+the model 'pmg01~cylinders' gives us the lowest AIC value.)
 However, I will pick 'weight' because it is continuous variable.
 I think this choice may make interpretation or prediction more interesting.
 
@@ -684,35 +688,95 @@ set.seed(20211126)
 test_index <- sort(sample(1:dim(auto)[1], 40))
 train_index <- setdiff(1:dim(auto)[1], test_index)
 
-auto_train <- auto[train_index,]
+auto_train <- auto[train_index, ]
 auto_test <- auto[test_index, ]
 dim(auto_train)
 dim(auto_test)
+
 ```
 
 Now, the training set consists of 352 data points.
+Let's compare the shapes of each variable in the training and test sets.
+
+```{r}
+hist_train_vs_test <- function(train_set, test_set, var_name) {
+  train_set <- as.numeric(train_set)
+  test_set <- as.numeric(test_set)
+  par(mfrow = c(1, 2))
+  upper_bd <- max(range(train_set)[2], range(test_set)[2])
+  lower_bd <- min(range(train_set)[1], range(test_set)[1])
+  set_breaks <- seq(lower_bd, upper_bd, length.out = 11)
+  train_hist <- hist(train_set,
+    xlab = paste("train:", var_name), main = "",
+    breaks = set_breaks)
+  hist(test_set,
+    breaks = set_breaks,
+    xlab = paste("test:", var_name), main = "")
+}
+
+hist_train_vs_test(auto_train$mpg, auto_test$mpg, "mpg")
+hist_train_vs_test(auto_train$cylinders, auto_test$cylinders, "cylinders")
+hist_train_vs_test(auto_train$displacement, auto_test$displacement, "displacement")
+hist_train_vs_test(auto_train$horsepower, auto_test$horsepower, "horsepower")
+hist_train_vs_test(auto_train$weight, auto_test$weight, "weight")
+hist_train_vs_test(auto_train$acceleration, auto_test$acceleration, "acceleration")
+hist_train_vs_test(auto_train$origin, auto_test$origin, "origin")
+hist_train_vs_test(auto_train$mpg01, auto_test$mpg01, "mpg01")
+```
+
+Although the shape is not exactly the same because it is drawn at random,
+there was never a case where there were no or extremely fewer samples in a particular category.
+So, Let's move on!
 
 
 **(f) Perform logistic regression on the training data in order to predict mpg01 using the variables**
 **that seemed most associated with mpg01 in (b). What is the test error of the model obtained?**
 
-add model notation 
+At the problem 3(b), I picked the 'weight' as the predictor.
+So, my model becomes,
+
+\[logit(P(y_i = 1 | x_{i}) = 
+  \beta_0 + \beta_1 x_{i}\]
+for i = 1,2,...,352, with 
+
+- $y_i$: (binary factor) mpg01 of i-th observation
+- $x_{i}$: weight of the i-th observation
+
+and $\beta_1$ is the effect of weight. I will offer the exact interpretation of $\beta_1$ after fitting.
+
+Here is the fitting result.
 
 ```{r}
 auto_glm_fit <- glm(mpg01 ~ weight, data = auto_train)
 summary(auto_glm_fit)
 ```
 
-Deviance
+To test the model significance, calculate the difference between two deviances.
+
+H0: $\beta_1 = 0$
+
+H1: $\beta_1 \neq 0$
+
 ```{r}
 87.955 - 38.371
 1 - pchisq(87.955 - 38.371, 1)
 ```
-Very good!
 
-coeff intepretation
+The test statistic is $\chi^2$ is $87.955 - 38.371 = 49.584$, 
+which follows the chi-square distribution with degrees of freedom 1.
+The p-value is very close to 0, so we can reject H0 with common significance levels like 0.05 or 0.01.
+Thus, we can conclude that this model is significant.
 
-prob example table
+The above model-significance test is also the test about the coefficient $\beta_1$.
+So, we can say that $\beta_1$ is statistically not 0, or it is significant,
+even if the estimated value of $\beta_1$ is very close to 0.
+In this case, the odds value gets multiplied by $e^{0.0004493}$ as weight increases by one unit.
+Or, equivalently, the odds ratio is
+
+\[\frac{P(Y=1|log{x}=c+1)/P(Y=0|log{x}=c+1)}{P(Y=1|log{x}=c)/P(Y=0|log{x}=c)} = e^{-0.0004493}\]
+
+Here is a probability table at some selected 'weight' points.
+
 ```{r}
 logit_inv <- function(z){
   return(exp(z) / (1 + exp(z)))
@@ -729,7 +793,7 @@ kable(data.frame(
 )
 ```
 
-We can draw the fitted curve.
+We can draw the fitted curve on the scatterplot.
 
 ```{r}
 par(mfrow = c(1, 1))
@@ -738,8 +802,14 @@ plot(mpg01 ~ weight, pch = 19, data = auto_train,
 curve(logit_inv(auto_coeff[1] + auto_coeff[2] * x), add = TRUE, col = "red")
 ```
 
+The red line is fitted curve.
+Contrary to what I expected in the EDA step, the curve is quite gentle.
+This is because the absolute value of the fitted coefficient is very close to 0.
 
-Evaluation:
+Using the test dataset, let's evaluate this fitted model.
+I will choose the cutoff point by a kind of grid-search (with the grid 0.00, 0.01, 0.02, ... ,1.00).
+Specifically, after calculating each cutoff value how much the model predict correctly,
+I will use the value that gave us the most correct prediction.
 
 ```{r}
 
@@ -762,20 +832,33 @@ for (i in seq_len(length(cutoff_candidates))) {
   sens_ratio[i] <- sum(auto_test$mpg01 == 1 & auto_glm_pred_binary == 1) / sum(auto_test$mpg01 == 1)
   falsepos_ratio[i] <- sum(auto_test$mpg01 == 0 & auto_glm_pred_binary == 1) / sum(auto_test$mpg01 == 0)
 }
+print(best_cutoff)
+```
 
+The best cutoff value is 0.62.
+Under this cutoff value,
+
+```{r}
 auto_glm_pred_binary <- ifelse(auto_glm_fit_prob > best_cutoff, 1, 0)
 auto_glm_confusion_table <- table(
     pred = auto_glm_pred_binary, true = auto_test$mpg01)
-cat("best_cutoff:", best_cutoff, "\n")
 auto_glm_confusion_table
+```
 
+Among 40 test set data, the model predict 37 cases (92.5%) correctly.
+Let's draw the ROC curve using the test set.
+
+```{r}
 plot(falsepos_ratio, sens_ratio,
   type = "l", main = "ROC curve",
   xlim = c(0, 1), ylim = c(0, 1))
 ```
 
+It looks very good.
 
-residual plots for fitted
+Finally, let's see residual plots for fitted model (of training data).
+Left plots are residual plot with 'weight' on the horizontal axis,
+and right plots are with 'fitted probability' on the horizontal axis.
 
 ```{r}
 auto_pearson_res <- residuals(auto_glm_fit, type = "pearson")
@@ -788,7 +871,7 @@ res_plot_func <- function(res, main){
   par(mfrow = c(1, 2))
   plot(auto_train$weight, res, main = main)
   abline(h = 0)
-  plot(auto_fitted_prob, res, main = "(verse fitted probability)")
+  plot(auto_fitted_prob, res, main = "")
   abline(h = 0)
 }
 res_plot_func(auto_pearson_res, main = "pearson residual")
@@ -797,3 +880,5 @@ res_plot_func(auto_student_res, main = "jacknife residual")
 res_plot_func(auto_dev_res, main = "deviance residual")
 ```
 
+We can see two lines for each residual plot.
+In logistic regression, this pattern seems natural.
